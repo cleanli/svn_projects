@@ -20,45 +20,21 @@ _start:	b       start_code
 	b	_start
 	.balignl 16,0xdeadbeef
 .align 4
-filldata:
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
+
+mem_reg_value:
+        .long   0x22111110
+        .long   0x00000700
+        .long   0x00000700
+        .long   0x00000700
+        .long   0x00000700
+        .long   0x00000700
+        .long   0x00000700
+        .long   0x00018009
+        .long   0x00018009
+        .long   0x00ac03f4
+        .long   0x000000b2
+        .long   0x00000030
+        .long   0x00000030
 	.long 0
 	.long 0
 	.long 0
@@ -194,45 +170,92 @@ start_code:
 	ldr	r0, =INTSUBMSK
 	str	r1, [r0]
 
-	/* FCLK:HCLK:PCLK = 1:2:4 */
-	/* default FCLK is 120 MHz ! */
-	ldr	r0, =CLKDIVN
-	mov	r1, #3
-	str	r1, [r0]
+/*******************************************************************************/
+#  define GPFCON                0x56000050
+#  define GPFDAT                0x56000054      /*  */
+#  define LOCKTIME              0x4C000000
+#  define MPLLCON               0x4C000004
+#  define UPLLCON               0x4C000008
 
-/*my loop*/
-#  define GPFCON		0x56000050
-#  define GPFDAT		0x56000054	/*  */
+        ldr     r0, =GPFCON
+        mov     r1, #0x5500
+        str     r1, [r0]
 
-	ldr	r0, =GPFCON
-	mov	r1, #0x5500
-	str	r1, [r0]
-#define GPHCON 	0x56000070
-#define GPHUP	0x56000078
-#define ULCON0 	0x50000000
-#define UCCON0 	0x50000004
-#define UFCON0 	0x50000008
-#define USCON0 	0x50000010
-#define UTXH0 	0x50000020
-#define URXH0 	0x50000024
+        @initialize clock
+        ldr     r0, =LOCKTIME
+        ldr     r1, =0x00ffffff
+        str     r1, [r0]
+        /* FCLK:HCLK:PCLK = 1:4:8 */
+        ldr     r0, =CLKDIVN
+        mov     r1, #5
+        str     r1, [r0]
+        @open code cache
+        mrc     p15,0,r1,c1,c0,0
+        orr     r1,r1,#0xc0000000
+        mcr     p15,0,r1,c1,c0,0
+        @UPLL setup
+        ldr     r0, =UPLLCON
+        ldr     r1, =(0x38<<12|0x2<<4|0x2)
+        str     r1, [r0]
+        nop
+        nop
+        nop
+        nop
+        nop
+        nop
+
+        @MPLL setup
+        ldr     r0, =MPLLCON
+        ldr     r1, =0x7f021
+        str     r1, [r0]
+        nop
+        nop
+        nop
+        nop
+        nop
+        nop
+
+        @memsetup
+        ldr     r0, =0x48000000
+        adrl    r1, mem_reg_value
+        ldr     r2, =0x48000030
+loop10:
+        ldr     r4, [r1], #4
+        str     r4, [r0], #4
+        cmp     r2, r0
+        bne     loop10
+
+        ldr     r0, =GPFDAT
+        mov     r1, #0x50
+        str     r1, [r0]
+
+#define GPHCON  0x56000070
+#define GPHUP   0x56000078
+#define ULCON0  0x50000000
+#define UCCON0  0x50000004
+#define UFCON0  0x50000008
+#define USCON0  0x50000010
+#define UTXH0   0x50000020
+#define URXH0   0x50000024
 #define UBRDIV0 0x50000028
 
 /*Init serial port 0*/
-	ldr	r0, =GPHCON
-	ldr	r1, =0xaaa0
-	str	r1, [r0]
-	ldr	r0, =GPHUP
-	ldr	r1, =0x7ff
-	str	r1, [r0]
-	ldr	r0, =ULCON0
-	mov	r1, #0x3
-	str	r1, [r0]
-	ldr	r0, =UCCON0
-	mov	r1, #0x5
-	str	r1, [r0]
-	ldr	r0, =UBRDIV0
-	mov	r1, #18
-	str	r1, [r0]	/*set baudrate 9600bps*/
+        ldr     r0, =GPHCON
+        ldr     r1, =0xaaa0
+        str     r1, [r0]
+        ldr     r0, =GPHUP
+        ldr     r1, =0x7ff
+        str     r1, [r0]
+        ldr     r0, =ULCON0
+        mov     r1, #0x3
+        str     r1, [r0]
+        ldr     r0, =UCCON0
+        mov     r1, #0x5
+        str     r1, [r0]
+        ldr     r0, =UBRDIV0
+        mov     r1, #0x1b
+        str     r1, [r0]        /*set baudrate 115200bps*/
 
-	b	main	
-
+        b       main
+                                           
+/*****************************************************************************/

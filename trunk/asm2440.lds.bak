@@ -54,11 +54,4 @@ SECTIONS
 	__bss_start = .;
 	.bss (NOLOAD) : { *(.bss) . = ALIGN(4); }
 	_end = .;
-	. = 0xd00;
-	. = ALIGN(4);
-	.text	:
-	{
-	    xmodem.o	(.text)
-	    s3c2440.o	(.text)
-	}
 }

@@ -223,7 +223,7 @@ void run_clean_boot()
 	unsigned char c;
 	
 	mrw_addr = 0;
-	lprint("\r\n\r\nHello, this is clean_boot v%s.\r\n", CLEAN_BOOT_VERSION);
+	lprint("\r\n\r\nHello, this is clean_boot v%s,%s %s.\r\n", CLEAN_BOOT_VERSION,__DATE__,__TIME__);
 	lmemset(cmd_buf, 0, COM_MAX_LEN);
 	cmd_buf_p = 0;
 	lprint("\r\nCleanBoot@%s>", PLATFORM);
