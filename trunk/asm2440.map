@@ -1,0 +1,173 @@
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+                0x00000000                . = 0x0
+                0x00000000                . = ALIGN (0x4)
+
+.text           0x00000000      0xa64
+ asm2440.o(.text)
+ .text          0x00000000      0x310 asm2440.o
+                0x00000000                _start
+ cmd.o(.text)
+ .text          0x00000310      0x50c cmd.o
+                0x0000075c                run_clean_boot
+                0x00000654                lmemcpy
+                0x00000338                print_help
+                0x000005e8                read_mem
+                0x00000310                go
+                0x00000494                print_mem
+                0x0000055c                write_mem
+                0x00000378                asc_to_hex
+                0x00000680                lmemset
+                0x000006a4                handle_cmd
+                0x0000040c                str_to_hex
+                0x00000328                get_file_by_serial
+                0x000003b4                get_howmany_para
+ m.o(.text)
+ .text          0x0000081c        0x4 m.o
+                0x0000081c                main
+ print.o(.text)
+ .text          0x00000820      0x244 print.o
+                0x0000083c                halfbyte2char
+                0x000009b0                lprint
+                0x000008a4                num2str
+                0x00000960                print_uint
+                0x00000988                print_hex
+                0x00000820                print_string
+                0x00000860                div
+
+.glue_7         0x00000a64        0x0
+
+.glue_7t        0x00000a64        0x0
+                0x00000a64                . = ALIGN (0x4)
+
+.rodata         0x00000a64       0x38
+ *(.rodata)
+ .rodata        0x00000a64       0x38 cmd.o
+
+.rodata.str1.4  0x00000a9c      0x207
+ .rodata.str1.4
+                0x00000a9c      0x1dc cmd.o
+                                0x1e0 (size before relaxing)
+ .rodata.str1.4
+                0x00000c78       0x2b xmodem.o
+                                 0x2c (size before relaxing)
+                0x00000ca4                . = ALIGN (0x4)
+
+.data           0x00000ca4        0x0
+ *(.data)
+                0x00000ca4                . = ALIGN (0x4)
+                0x00000ca4                __bss_start = .
+
+.bss            0x00000ca4       0x28
+ *(.bss)
+ .bss           0x00000ca4       0x28 cmd.o
+                0x00000ca4                cmd_buf_p
+                0x00000ccc                . = ALIGN (0x4)
+                0x00000ccc                _end = .
+                0x00000ccc                . = ALIGN (0x4)
+
+._text          0x00000ccc      0x230
+ s3c2440.o(.text)
+ .text          0x00000ccc       0x64 s3c2440.o
+                0x00000ccc                s3c2440_serial_send_byte
+                0x00000cf4                s3c2440_serial_recv_byte
+                0x00000d1c                s3c2440_is_serial_recv
+ xmodem.o(.text)
+ .text          0x00000d30      0x1cc xmodem.o
+                0x00000d78                xmodem_1k_recv
+                0x00000d30                time_limit_recv_byte
+                0x00000efc                . = ALIGN (0x4)
+                0x00000efc                _end = .
+LOAD asm2440.o
+LOAD m.o
+LOAD cmd.o
+LOAD xmodem.o
+LOAD print.o
+LOAD s3c2440.o
+LOAD /home/clean/arm-linux/arm-tools/bin/../lib/gcc-lib/arm-linux/3.3.6/libgcc.a
+LOAD /home/clean/arm-linux/arm-tools/bin/../arm-linux/lib/libm.a
+LOAD /home/clean/arm-linux/arm-tools/lib/gcc-lib/arm-linux/3.3.6/libgcc.a
+OUTPUT(asm2440.elf elf32-littlearm)
+
+.debug_line     0x00000000      0x30e
+ .debug_line    0x00000000       0x6a asm2440.o
+ .debug_line    0x0000006a       0xce cmd.o
+ .debug_line    0x00000138       0x41 m.o
+ .debug_line    0x00000179       0xd9 print.o
+ .debug_line    0x00000252       0x46 s3c2440.o
+ .debug_line    0x00000298       0x76 xmodem.o
+
+.debug_info     0x00000000      0x900
+ .debug_info    0x00000000       0x5d asm2440.o
+ .debug_info    0x0000005d      0x409 cmd.o
+ .debug_info    0x00000466       0x92 m.o
+ .debug_info    0x000004f8      0x263 print.o
+ .debug_info    0x0000075b       0x8e s3c2440.o
+ .debug_info    0x000007e9      0x117 xmodem.o
+
+.debug_abbrev   0x00000000      0x3e1
+ .debug_abbrev  0x00000000       0x14 asm2440.o
+ .debug_abbrev  0x00000014      0x13f cmd.o
+ .debug_abbrev  0x00000153       0x76 m.o
+ .debug_abbrev  0x000001c9       0xec print.o
+ .debug_abbrev  0x000002b5       0x67 s3c2440.o
+ .debug_abbrev  0x0000031c       0xc5 xmodem.o
+
+.debug_aranges  0x00000000       0xc0
+ .debug_aranges
+                0x00000000       0x20 asm2440.o
+ .debug_aranges
+                0x00000020       0x20 cmd.o
+ .debug_aranges
+                0x00000040       0x20 m.o
+ .debug_aranges
+                0x00000060       0x20 print.o
+ .debug_aranges
+                0x00000080       0x20 s3c2440.o
+ .debug_aranges
+                0x000000a0       0x20 xmodem.o
+
+.debug_frame    0x00000000      0x314
+ .debug_frame   0x00000000      0x164 cmd.o
+ .debug_frame   0x00000164       0x20 m.o
+ .debug_frame   0x00000184       0xf4 print.o
+ .debug_frame   0x00000278       0x40 s3c2440.o
+ .debug_frame   0x000002b8       0x5c xmodem.o
+
+.debug_pubnames
+                0x00000000      0x214
+ .debug_pubnames
+                0x00000000       0xe3 cmd.o
+ .debug_pubnames
+                0x000000e3       0x1b m.o
+ .debug_pubnames
+                0x000000fe       0x71 print.o
+ .debug_pubnames
+                0x0000016f       0x67 s3c2440.o
+ .debug_pubnames
+                0x000001d6       0x3e xmodem.o
+
+.debug_str      0x00000000      0x282
+ .debug_str     0x00000000      0x154 cmd.o
+                                0x164 (size before relaxing)
+ .debug_str     0x00000154        0x5 m.o
+                                 0x77 (size before relaxing)
+ .debug_str     0x00000159       0x72 print.o
+                                 0xda (size before relaxing)
+ .debug_str     0x000001cb       0x53 s3c2440.o
+                                 0xac (size before relaxing)
+ .debug_str     0x0000021e       0x64 xmodem.o
+                                 0xc4 (size before relaxing)
+
+.comment        0x00000000       0x5a
+ .comment       0x00000000       0x12 cmd.o
+ .comment       0x00000012       0x12 m.o
+ .comment       0x00000024       0x12 print.o
+ .comment       0x00000036       0x12 s3c2440.o
+ .comment       0x00000048       0x12 xmodem.o
