@@ -196,6 +196,13 @@ loop10:
         ldr     r2, [r1, #oNFCONT]
         orr     r2, r2, #0x2            @ Flash Memory Chip Disable
         str     r2, [r1, #oNFCONT]
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	@judge if in steppingstone
+	mov	r0, pc
+	cmp	r0, #0x30000000
+	bgt	jump_to_ram	@not in steppingstone, already in dram, go without copying nand code
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
         @ get ready to call C functions (for nand_read())
         @ldr     sp, DW_STACK_START      @ has been setuped at start
@@ -227,7 +234,8 @@ go_next:
         bne     go_next
 	
 	@jump to ram to run
-	ldr     r1, =jump_to_ram
+jump_to_ram:
+	ldr     r1, =here_is_ram
         add     pc, r1, #0
         nop
         nop
@@ -237,7 +245,7 @@ bad_nand_read:
 	bl	s3c2440_serial_send_byte
 	b	.
 
-jump_to_ram:
+here_is_ram:
         b       main
                                                     
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
