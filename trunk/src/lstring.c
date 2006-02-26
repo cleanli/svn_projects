@@ -1,4 +1,4 @@
-#include "define.h"
+#include "comdefine.h"
 #include "lstring.h"
 uch lstrlen(uch*s)
 {	

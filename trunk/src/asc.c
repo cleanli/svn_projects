@@ -1,4 +1,4 @@
-#include "define.h"
+#include "comdefine.h"
 #include "asc.h"
 #include "lstring.h"
 uch sByte2Asc(uch b)

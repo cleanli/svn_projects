@@ -1,4 +1,4 @@
-#include "define.h"
+#include "comdefine.h"
 #include "check.h"
 
 uch sumCheck(uch*b,uch n)
