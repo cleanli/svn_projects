@@ -1,5 +1,5 @@
-#ifndef _GNL_STRING_H 
-#define _GNL_STRING_H 
+#ifndef _LSTRING_H 
+#define _LSTRING_H 
 
 #include "comdefine.h"
 
@@ -16,7 +16,7 @@
 	 			uch* - source string address
      Return   : dest string address
      *****************************************************************************************/
-	 uch* lstrcpy(uch data*,uch*);
+	 uch* lstrcpy(uch *,uch*);
 
 	 /*****************************************************************************************
      Function : Append the string
@@ -24,7 +24,7 @@
 	 			uch* - source string address
      Return   : dest string address
      *****************************************************************************************/
-	 uch* lstrcat(uch data*,uch*);
+	 uch* lstrcat(uch *,uch*);
 
 	 /*****************************************************************************************
      Function : Memory copy
@@ -33,7 +33,7 @@
 				uch  - number of copy memory
      Return   : dest memory address
      *****************************************************************************************/
-	 uch* lmemcpy(uch data*d,uch*s,uch n);
+	 uch* lmemcpy(uch *d,uch*s,uch n);
 
 	 /*****************************************************************************************
      Function : Memory set value
@@ -42,9 +42,8 @@
 				uch  - number of memory
      Return   : dest memory address
      *****************************************************************************************/
-	 uch* lmemset(uch data*s,uch vl,uch n);
+	 uch* lmemset(uch *s,uch vl,uch n);
 
 #endif
-
 
 

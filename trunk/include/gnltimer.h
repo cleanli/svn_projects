@@ -1,7 +1,7 @@
-#ifndef _TIMER_H
-#define _TIMER_H
+#ifndef _GNL_TIMER_H
+#define _GNL_TIMER_H
 
-#include "define.h"
+#include "comdefine.h"
 
 /*******************************************************
 Func : Delay a certain ms (max 62 ms)

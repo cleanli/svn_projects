@@ -1,6 +1,7 @@
 #ifndef _TIMER_H
 #define _TIMER_H
 
+#include "global.h"
 #include "define.h"
 
 /*******************************************************
