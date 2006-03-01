@@ -47,4 +47,4 @@ uch* forCrc16(uch *crcdata,uch len,uch *crccode)
 	crccode[1]=abc.chCh[1];
 #endif	
 	return crccode;
-}
+}	    

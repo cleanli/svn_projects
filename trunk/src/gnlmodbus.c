@@ -6,14 +6,6 @@
 #include "gnlcheck.h"
 #include "gnlstring.h"
 
-uch RrecvModbus(uch *pBuf)
-{
-	static yyy;
-	yyy++;
-	if(yyy==1)lstrcpy (pBuf,"wwwwww");
-	if(yyy==2)lstrcpy(pBuf, "uudu\n\r");
-	return 6;
-}
 uch sendModbus(uch*m,uch n)
 {
 	uch a;
@@ -55,7 +47,7 @@ uch* getContent(uch chAddr,uch data *buffer,uch Protocol)
 	forCrc16(buffer,4,p);
 	return buffer;
 	}
-}*/
+}
 bit checkRecv(uch data *buffer, uch Protocol)
 {
 	uch tmp[7];
@@ -73,7 +65,7 @@ bit checkRecv(uch data *buffer, uch Protocol)
 	return 0;
 	}
 }
-/*
+
 uint getModbusData(uch data*buffer)
 {
 	union ASCData
@@ -93,8 +85,8 @@ void recvASCIICom(uch * buffer, uch maxLen)
 {
 	uch * pBuf, uchRvLen, uchTtRvLen, leftLen;
 
-//	lstrcpy(buffer,":0703010020D5\r\n");return;
-	
+	lstrcpy(buffer,":0706040020C103050501\r\n");return;
+//	lstrcpy(buffer,":0703040020D2\r\n");return;	
 	uchTtRvLen=0;
 	leftLen=maxLen;
 	pBuf=buffer;
@@ -131,10 +123,10 @@ void recvASCIICom(uch * buffer, uch maxLen)
 
 void dealASCIICom(uch *response, uch *com, uch addr)
 {
-	uch i=0,tmp,dataLen;
+	uch tmp,dataLen;
 	uch xdata *dataPtr;
 
-	response[i]=0;
+	response[0]=0;
 
 	//syntax check
 
@@ -149,19 +141,33 @@ void dealASCIICom(uch *response, uch *com, uch addr)
 
 	tmp/=2;//tmp is length, pcom is second byte
 	if (sumCheck(com,tmp)!=0) return;//sum check should be ok
+	dataLen=com[2];
+	dataPtr=dByte2Int(com[3],com[4]);
 	
-	if(com[1]==0x03)//read command
-	{
-		dataLen=com[2];
-		dataPtr=dByte2Int(com[3],com[4]);
+	if(com[1]==0x03)//  read command  
+	{//  ":" + LocalAddr + "03" + DataLength + DataAddr(Hi) + DataAddr(Low) + SumCheck + <CR> + <LF>
+		if(tmp!=7)return;//length not right
 		//begin write data to com
 		lmemcpy(com+3,dataPtr,dataLen);
+		*dataPtr=0x44;
 		com[dataLen+3]=0xff-sumCheck(com,dataLen+3)+1;
 		//write to response
 		response[0]=':';
 		bytes2Str(response+1,com,dataLen+4);
 		lstrcat(response,"\r\n");
 		return;
+	}
+	else if (com[1]==0x06)//write
+	{//  ":" + LocalAddr + "06" + DataLength + DataAddr(Hi) + DataAddr(Low) + Data ... + SumCheck + <CR> + <LF>
+		if(tmp!=(7+dataLen))return;
+		//begin write data to local memory
+		lmemcpy(dataPtr,com+5,dataLen);
+		com[5]=0xff-sumCheck(com,5)+1;
+		//write to response
+		response[0]=':';
+		bytes2Str(response+1,com,6);
+		lstrcat(response,"\r\n");
+		return;		
 	}
 	else
 	{
