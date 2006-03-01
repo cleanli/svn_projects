@@ -85,7 +85,7 @@ void recvASCIICom(uch * buffer, uch maxLen)
 {
 	uch * pBuf, uchRvLen, uchTtRvLen, leftLen;
 
-	lstrcpy(buffer,":0706040020C103050501\r\n");return;
+//	lstrcpy(buffer,":0706040020C103050501\r\n");return;
 //	lstrcpy(buffer,":0703040020D2\r\n");return;	
 	uchTtRvLen=0;
 	leftLen=maxLen;

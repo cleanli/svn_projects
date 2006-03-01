@@ -10,7 +10,7 @@ uch sumCheck(uch*b,uch n)
 	}
 	return sum;
 }
-
+/*
 uch* forCrc16(uch *crcdata,uch len,uch *crccode)
 {
 	union uniInt
@@ -47,4 +47,4 @@ uch* forCrc16(uch *crcdata,uch len,uch *crccode)
 	crccode[1]=abc.chCh[1];
 #endif	
 	return crccode;
-}	    
+}	  */  
