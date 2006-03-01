@@ -8,14 +8,3 @@ void delayms(unsigned char n)//n<63
 	resetCounter();
 	while(getCounter()<=m);
 }
-/*
-void delay50ms(uch n)
-{
-	uch m=0;
-	while(m<n)
-	{
-		delayms(50);
-		m++;
-	}
-}
-  */

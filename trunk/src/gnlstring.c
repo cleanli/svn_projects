@@ -26,10 +26,3 @@ uch* lmemcpy(uch *d,uch*s,uch n)
 	while(n-->0)*d++=*s++;
 	return p;
 }
-/*
-uch* lmemset(uch *s,uch vl,uch n)
-{
-	uch *p=s;
-	while(n-->0)*p++=vl;
-	return s;
-}  */

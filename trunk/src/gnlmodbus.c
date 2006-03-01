@@ -16,77 +16,16 @@ uch sendModbus(uch*m,uch n)
 	set485in();
 	return a;
 }
+
 uch recvModbus(uch *m,uch maxLen)
 {
 	return recvSerial(m,maxLen);
 }
-/*
-uch* getContent(uch chAddr,uch data *buffer,uch Protocol)
-{
-	uch crcByte, szByte[3], *p;
-	szByte[2]=0;
-	if(Protocol==ASCII)
-	{
-	crcByte=0xb5-chAddr;
-	buffer[0]=':';
-	lmemcpy(buffer+1,dByte2Str(chAddr,szByte),2);
-	buffer[3]=0;
-	lstrcat(buffer,"0347000001");
-	dByte2Str(crcByte,szByte);
-	lstrcat(buffer,szByte);
-	lstrcat(buffer,"\r\n");
-	return buffer;
-	}
-	else
-	{
-	p=buffer;
-	*p++=chAddr;
-	*p++=0x03;
-	*p++=0x0;
-	*p++=0x2;
-	forCrc16(buffer,4,p);
-	return buffer;
-	}
-}
-bit checkRecv(uch data *buffer, uch Protocol)
-{
-	uch tmp[7];
 
-	if(Protocol==ASCII)
-	{
-	if(sumCheck(str2Ch(tmp,buffer+1),ASCIIREVFRAMELEN))return 0;
-	lmemcpy(buffer,tmp,ASCIIREVFRAMELEN);
-	return 1;//check ok
-	}
-	else
-	{
-	forCrc16(buffer,RTUREVFRAMELEN,buffer+RTUREVFRAMELEN);
-	if(buffer[RTUREVFRAMELEN]==0 && buffer[RTUREVFRAMELEN+1]==0)return 1;//check ok
-	return 0;
-	}
-}
-
-uint getModbusData(uch data*buffer)
-{
-	union ASCData
-	{
-		uch b[5];
-		struct stt
-		{
-			uch b3[3];
-			uint intd;
-		}s;
-	} ad;
-	lmemcpy(&(ad.b[0]),buffer,5);
-	return ad.s.intd;
-}
-*/
 void recvASCIICom(uch * buffer, uch maxLen)
 {
 	uch * pBuf, uchRvLen, uchTtRvLen, leftLen;
 
-//	lstrcpy(buffer,":0706040020C103050501\r\n");return;
-//	lstrcpy(buffer,":0703040020D2\r\n");return;	
 	uchTtRvLen=0;
 	leftLen=maxLen;
 	pBuf=buffer;
