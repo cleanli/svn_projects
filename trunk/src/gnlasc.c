@@ -1,6 +1,9 @@
 #include "comdefine.h"
 #include "gnlasc.h"
 #include "lstring.h"
+#include "global.h"
+#include "gnlmath.h"
+
 uch sByte2Asc(uch b)
 {
 	b&=0xf;
@@ -78,25 +81,28 @@ void bytes2Str(uch *dest, uch *source, uch len)
 
 void int2Str(uch* acTmp,uint iValue, struct tpIDS *sttIntDispSet)
 {
-	uch w,f,i,j,v,*p;
+	uch w,f,i,v,*p;
 	uint base;
+	BOOL bF=1;
 	w=sttIntDispSet->cWidth;
 	f=sttIntDispSet->cFill;
-	base=power(10,w);
+	base=IPower(10,w);
 	v= iValue;
 	p=acTmp;
 
         i=v/base;
         v=v-i*base;
 	base/=10;
-	whill(w-->0)
+	while(w-->0)
 	{
 		i=v/base;
 		v=v-i*base;
 		base/=10;
 		i+=0x30;
-		if(i==0x30)i=f;
+		if(i==0x30 && bF)i=f;
+		else bF=0;
 		*p++=i;
 	}
 	*p=0;
+	if(bF)*(p-1)=0x30;
 }
