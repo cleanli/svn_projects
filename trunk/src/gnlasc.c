@@ -75,3 +75,28 @@ void bytes2Str(uch *dest, uch *source, uch len)
 	*dest=0;
 	return;
 }
+
+void int2Str(uch* acTmp,uint iValue, struct tpIDS *sttIntDispSet)
+{
+	uch w,f,i,j,v,*p;
+	uint base;
+	w=sttIntDispSet->cWidth;
+	f=sttIntDispSet->cFill;
+	base=power(10,w);
+	v= iValue;
+	p=acTmp;
+
+        i=v/base;
+        v=v-i*base;
+	base/=10;
+	whill(w-->0)
+	{
+		i=v/base;
+		v=v-i*base;
+		base/=10;
+		i+=0x30;
+		if(i==0x30)i=f;
+		*p++=i;
+	}
+	*p=0;
+}

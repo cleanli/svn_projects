@@ -2,6 +2,7 @@
 #define _GNL_ASC_H
 
 #include "comdefine.h"
+#include "display.h"
 
      /*****************************************************************************************
      Function : Convert the byte to string in Hex
@@ -61,6 +62,16 @@
      Return   : None
      *****************************************************************************************/
 	 void bytes2Str(uch *dest, uch *source, uch len);
+
+
+	 /*****************************************************************************************
+     Function : Convert a int to ASC string
+     Parameter: uch* - result address
+		uint - The int to be convert
+		struct tpIDS* - The setting of display int
+     Return   : None
+     *****************************************************************************************/	
+	 void int2Str(uch* acTmp,uint iValue, struct tpIDS *sttIntDispSet);
 
 #endif
 
