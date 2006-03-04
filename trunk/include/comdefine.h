@@ -3,6 +3,8 @@
 
 #include <AT89X51.H>
 
+//#define _DEBUG
+
 #define uch unsigned char
 #define uint unsigned int
 #define ULONG unsigned long int
