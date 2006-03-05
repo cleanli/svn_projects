@@ -15,5 +15,11 @@ union uniIntBytes{
 	uch uchCh[2];
 };
 
+	struct tpIDS
+	{
+		uch cWidth;
+		uch cFill;
+	};
+
 
 #endif

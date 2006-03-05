@@ -1,7 +1,7 @@
 #ifndef _GNL_SERIAL_H
 #define _GNL_SERIAL_H
 
-#include "global.h"
+#include "comdefine.h"
 
 #define WAITTIME 16 //4ms, the wait time when receive data from serial port
 

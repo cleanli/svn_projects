@@ -48,6 +48,7 @@ uch sendModbus(uch*,uch);
 /***********************************************************************************
 Func: Receive memory byte from 485 bus
 Para: uch* - memory address
+	  uch - max len
 Retn: number of bytes received
 ***********************************************************************************/
 uch recvModbus ( uch*, uch ) ;

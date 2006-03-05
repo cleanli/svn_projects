@@ -2,7 +2,7 @@
 #define _GNL_ASC_H
 
 #include "comdefine.h"
-#include "display.h"
+
 
      /*****************************************************************************************
      Function : Convert the byte to string in Hex
