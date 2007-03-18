@@ -58,6 +58,8 @@ loop2:
 	MOVX    @DPTR,A ;sp stored
 
 	INC     DPTR
+        mov     a,#0xff
+        movx    @dptr,a
 	INC     DPTR    ;skip the first byte
 	MOV     A,R0
 	MOVX    @DPTR,A

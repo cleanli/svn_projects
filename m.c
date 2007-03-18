@@ -1,14 +1,17 @@
 #include <AT89x51.h>
 #include <stdlib.h>
 #include "gernel.h"
+#include "initial.h"
+#include "gnlserial.h"
+//#include "gnlstring.h"
 
-#define INIT_SP 0x30
-unsigned char total_task;
-struct task task_list[4];
-unsigned char cur_task_index;
-unsigned int task1ct=0,task2ct=0;
+#define INIT_SP 0x50
+xdata unsigned char total_task;
+xdata struct task task_list[4];
+xdata unsigned char cur_task_index;
+xdata unsigned int task1ct=0,task2ct=0;
 
-int count=1000;
+xdata int count=1000;
 
  
 
@@ -57,7 +60,7 @@ void task1(void)
 
 void task2(void)
 {
-//    int i;
+    int j;
 /*
 	while(1){
 	    if(++task2ct>task1ct)
@@ -73,6 +76,8 @@ void task2(void)
 		task2ct=1;
       }
 	  P1_2=!P1_2;
+        //for (j=0;j<254;j++)	delay();
+	    sendString("ssssss\r\n");
 	}
 }
 
@@ -85,13 +90,16 @@ void add_task(void(*fun)(void))
 	//f=&(task_list[total_task].chip_ram[INIT_SP]);
 	//	f=fun;
 	total_task++;
+	sendString("Adding task");
+	sendInt(total_task);
+    sendString("\r\n");
 }
 
 
 
 void main()
 {
-    //unsigned char j;
+    unsigned char j;
  /*
     while(1)
     {
@@ -101,9 +109,18 @@ void main()
 	*/
 	EA=0;
 	TMOD=0x22;
-	TH0=0xd0;
+	TH0=0x10;
 	TL0=0xfe;
 	ET0=1;
+
+	//serialinitial
+	PCON|=0x80;//baute rate double				PCON(SMOD--- --- --- GF1 GF0 PD  IDL)(0XXX0000)
+	SCON=0x50;//8,1 stop,receive enable			SCON(SM0 SM1 SM2 REN TB8 RB8 TI  RI )
+	TH1=0xff;
+	TL1=TH1;//19200,11.0592
+	TR1=1;//start timer 1
+	TI=1;
+
 	//SP=INIT_SP;
 	total_task=1;
 
@@ -113,10 +130,11 @@ void main()
 
 	EA=1;
 	TR0=1;//start the time0 interrupt
+	sendString("Hello\r\n");
     while(1)
     {
-        //for (j=0;j<254;j++)
-		delay();
+        //for (j=0;j<254;j++)	delay();
+	    sendString("Hello\r\n");
         //P1_2=!P1_2;
     }
 	return;
