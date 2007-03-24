@@ -6,9 +6,11 @@
 //#include "gnlstring.h"
 
 #define INIT_SP 0x50
+#define TIMER 0xe0
 xdata unsigned char total_task;
 xdata struct task task_list[4];
 xdata unsigned char cur_task_index;
+xdata unsigned char is_timer0_int;
 xdata unsigned int task1ct=0,task2ct=0;
 
 xdata int count=1000;
@@ -55,6 +57,8 @@ void task1(void)
 		P1_1=1;
 		task1ct=1;
       }
+sendString("ssssss,from task 111111\r\n");
+       //switch_task();
     }
 }
 
@@ -77,7 +81,8 @@ void task2(void)
       }
 	  P1_2=!P1_2;
         //for (j=0;j<254;j++)	delay();
-	    sendString("ssssss\r\n");
+	    sendString("ssssss,from task 22222\r\n");
+       //switch_task();
 	}
 }
 
@@ -90,9 +95,9 @@ void add_task(void(*fun)(void))
 	//f=&(task_list[total_task].chip_ram[INIT_SP]);
 	//	f=fun;
 	total_task++;
-	sendString("Adding task");
-	sendInt(total_task);
-    sendString("\r\n");
+	//sendString("Adding task");
+	//sendInt(total_task);
+    //sendString("\r\n");
 }
 
 
@@ -108,10 +113,11 @@ void main()
     }
 	*/
 	EA=0;
-	TMOD=0x22;
-	TH0=0x10;
-	TL0=0xfe;
+	TMOD=0x21;
+	TH0=TIMER;
+	TL0=0;
 	ET0=1;
+	is_timer0_int=0;
 
 	//serialinitial
 	PCON|=0x80;//baute rate double				PCON(SMOD--- --- --- GF1 GF0 PD  IDL)(0XXX0000)
@@ -134,8 +140,11 @@ void main()
     while(1)
     {
         //for (j=0;j<254;j++)	delay();
-	    sendString("Hello\r\n");
+	    sendString("Hello, this is from task 0\r\n");
+        //switch_task();
         //P1_2=!P1_2;
     }
 	return;
 }
+
+

@@ -15,7 +15,7 @@ struct task{
      unsigned char chip_ram[0x80];//0-0x7f
 	 struct regs regs_bak;//0x80-0x85
 	 void (*task_fun)(void);//0x86-0x88
-     unsigned char status;//0X89
+     unsigned char status;//0x89
 };
 
 #endif

@@ -2,7 +2,11 @@
 //#include "hardintface.h"
 #include "gnlstring.h"
 #include "gnlasc.h"
+#include "atomic.h"
+
 static uch delayct;
+xdata atomic lock;
+xdata uch serial_sleep[4]={0,0,0,0};
 //serial
 
 void resetCounter()
@@ -13,10 +17,10 @@ uch getCounter()
 {
 	return delayct;
 }
-void setSentFlag()
-{
-	TI=1;
-}
+//void setSentFlag()
+//{
+//	TI=1;
+//}
 
 void clrSentFlag()
 {
@@ -63,7 +67,7 @@ bit sendSerialByte(uch n)
 		return 0;
 	}
 }
-
+/*
 bit recvSerialByte(uch * n)
 {
 	resetCounter();
@@ -79,10 +83,27 @@ bit recvSerialByte(uch * n)
 		return 0;
 	}
 }
-
+	*/
 uch sendSerial(uch *m,uch n)
 {
 	uch a=0;
+    
+/*
+    EA=0;
+    if(lock!=0)
+    {
+        EA=1;
+        while(lock!=0);
+		lock=1;
+    }else{
+        EA=1;
+        lock=1;
+    }
+    
+*/
+	//spin_lock(&lock);
+    while(atomic_test_inc(&lock))
+         task_sleep(serial_sleep);
 	while(n-->0)
 	{
 		if(!(sendSerialByte(*m++)))
@@ -94,23 +115,26 @@ uch sendSerial(uch *m,uch n)
 			a++;
 		}
 	}
+    //spin_unlock(&lock);
+    atomic_dec(&lock);
+	task_wake(serial_sleep);
 	return a;
 }
 
-
+  /*
 uch recvSerial(uch *m,uch maxlen)
 {
 	uch n=0;
 	while(n<maxlen && (recvSerialByte(m++)))n++;
 	return n;
-}
+}	 
 
 bit sendASCByte(uch n)
 {
 	uch cT[2];
 	if(sendSerial(dByte2Str(n,cT),2)<2)return 0;
 	return 1;
-}
+}	 */
 
 void sendString(uch *c)
 {

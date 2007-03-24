@@ -37,7 +37,7 @@ uch sASC2Byte(uch*s)
 		return 0;
 	}
 }
-
+ /*
 uch dASC2Byte(uch*s)
 {
 	uch a=0;
@@ -46,7 +46,7 @@ uch dASC2Byte(uch*s)
 	a+=sASC2Byte(s+1);
 	return a;
 }
-
+   
 uch *str2Ch(uch *result, uch * buffer)
 {
 	uch l,i=0;
@@ -59,7 +59,7 @@ uch *str2Ch(uch *result, uch * buffer)
 	}
 	return p;
 }
-
+  
 uint dByte2Int(uch hi,uch low)
 {
 	union uniIntBytes uniTmp;
@@ -77,7 +77,7 @@ void bytes2Str(uch *dest, uch *source, uch len)
 	}
 	*dest=0;
 	return;
-}
+}	   */
 
 void int2Str(uch* acTmp,uint iValue, struct tpIDS *sttIntDispSet)
 {

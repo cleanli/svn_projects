@@ -12,6 +12,7 @@ File 1,1,<.\gnlserial.c><gnlserial.c> 0x0
 File 1,1,<.\gnlstring.c><gnlstring.c> 0x0 
 File 1,1,<.\gnlasc.c><gnlasc.c> 0x0 
 File 1,1,<.\gnlmath.c><gnlmath.c> 0x0 
+File 1,1,<.\atomic.c><atomic.c> 0x0 
 
 
 Options 1,0,0  // Target 'Target 1'
