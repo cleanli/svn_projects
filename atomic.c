@@ -4,6 +4,20 @@
 extern xdata unsigned char cur_task_index;
 extern xdata struct task task_list[4];
 
+
+static xdata unsigned char ea_bak;
+
+void int_disable_store()
+{
+    ea_bak=EA?1:0;
+    EA=0;
+}
+
+void int_restore()
+{
+    EA=(ea_bak!=0)?1:0;
+}
+
 void switch_task();
 /*
 void atomic_inc(atomic * s)
@@ -16,24 +30,20 @@ void atomic_inc(atomic * s)
 
 void atomic_dec(atomic * s)
 {
-    bit b;
-    b=EA;
-	EA=0;
+    int_disable_store();
 	(*s)--;
-	EA=b;
+	int_restore();
 }
 
 unsigned char atomic_test_inc(atomic * lock)
 {
-    bit b;
-    b=EA;
-	EA=0;
+    int_disable_store();
 	if(!(*lock)){
 	    (*lock)++;
-		EA=b;
+		int_restore();
 		return 0;
     }else{
-	    EA=b;
+	    int_restore();
 	    return 1;
     }
 }

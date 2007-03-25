@@ -4,18 +4,20 @@
 #include "gnlasc.h"
 #include "atomic.h"
 
-static uch delayct;
 xdata atomic lock;
 xdata uch serial_sleep[4]={0,0,0,0};
+extern xdata unsigned long time_sec;
+static xdata unsigned long delayct;
+
 //serial
 
 void resetCounter()
 {
-	delayct=0;
+	delayct=time_sec;
 }
 uch getCounter()
 {
-	return delayct;
+	return (uch)(time_sec-delayct);
 }
 //void setSentFlag()
 //{
@@ -102,8 +104,8 @@ uch sendSerial(uch *m,uch n)
     
 */
 	//spin_lock(&lock);
-    while(atomic_test_inc(&lock))
-         task_sleep(serial_sleep);
+//    while(atomic_test_inc(&lock))
+//        task_sleep(serial_sleep);
 	while(n-->0)
 	{
 		if(!(sendSerialByte(*m++)))
@@ -116,8 +118,8 @@ uch sendSerial(uch *m,uch n)
 		}
 	}
     //spin_unlock(&lock);
-    atomic_dec(&lock);
-	task_wake(serial_sleep);
+//    atomic_dec(&lock);
+//	task_wake(serial_sleep);
 	return a;
 }
 
@@ -138,13 +140,16 @@ bit sendASCByte(uch n)
 
 void sendString(uch *c)
 {
-	sendSerial(c,lstrlen(c));
+	//sendSerial(c,lstrlen(c));
+    for ( ; *c; c++) {
+        sendSerialByte(*c);
+    }
 }
 
 void sendInt(int i)
 {
-    uch buf[6];
-	struct tpIDS tmpS={5,' '};
+    xdata uch buf[6];
+	xdata struct tpIDS tmpS={5,' '};
 
 	int2Str(buf,i,&tmpS);
 	sendString(buf);

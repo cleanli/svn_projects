@@ -1,6 +1,13 @@
 #ifndef _GERNEL_H
 #define _GERNEL_H
 
+#define INIT_SP 0x50
+#define TIMER 0xe0
+#define VERSION "0.3"
+#define MAX_TASK 4
+#define SECOND_COUNTS 223
+#define SECOND_LED P1_2
+
 struct regs{
     unsigned char psw;//0x80
 	unsigned char dpl;//0x81

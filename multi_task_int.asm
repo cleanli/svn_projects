@@ -7,6 +7,7 @@ NAME	T
 
 ?PR?Timer0?T         SEGMENT CODE 
         EXTRN	XDATA (is_timer0_int)
+	EXTRN	XDATA (intrpt_count)
 	PUBLIC	Timer0
 
 
@@ -29,7 +30,12 @@ SET_TIMER_FLAG:
  	PUSH    DPH
 	PUSH    DPL
 	MOV  	DPTR,#is_timer0_int
-	MOVX     @DPTR,A 
+	MOVX    @DPTR,A 
+
+	MOV  	DPTR,#intrpt_count
+	MOVX    A, @DPTR
+        INC     A
+        MOVX    @DPTR,A ;inc intrpt_count
         POP     DPL
 	POP     DPH
 	RET

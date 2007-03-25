@@ -24,8 +24,8 @@ $NOMOD51
 ;               ; the absolute start-address of IDATA memory is always 0
 IDATALEN        EQU     80H     ; the length of IDATA memory in bytes.
 ;
-XDATASTART      EQU     0H      ; the absolute start-address of XDATA memory
-XDATALEN        EQU     0H      ; the length of XDATA memory in bytes.
+XDATASTART      EQU     8000H      ; the absolute start-address of XDATA memory
+XDATALEN        EQU     8000H      ; the length of XDATA memory in bytes.
 ;
 PDATASTART      EQU     0H      ; the absolute start-address of PDATA memory
 PDATALEN        EQU     0H      ; the length of PDATA memory in bytes.

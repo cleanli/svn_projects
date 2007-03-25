@@ -3,19 +3,62 @@
 #include "gernel.h"
 #include "initial.h"
 #include "gnlserial.h"
+#include "stdarg.h"
 //#include "gnlstring.h"
 
-#define INIT_SP 0x50
-#define TIMER 0xe0
+
 xdata unsigned char total_task;
-xdata struct task task_list[4];
+xdata struct task task_list[MAX_TASK];
 xdata unsigned char cur_task_index;
 xdata unsigned char is_timer0_int;
 xdata unsigned int task1ct=0,task2ct=0;
+xdata unsigned char intrpt_count;
+xdata unsigned long time_sec;
 
 xdata int count=1000;
 
  
+
+int printk(const char * fmt, ...)
+{
+    xdata const char *s;
+    xdata int d;
+    xdata va_list ap;
+
+    va_start(ap, fmt);
+    while (*fmt) {
+        if (*fmt != '%') {
+			sendSerialByte(*fmt++);
+            continue;
+        }
+        switch (*++fmt) {
+		    case '%':
+			    sendSerialByte(*fmt);
+				break;
+            case 's':
+                s = va_arg(ap, const char *);
+                sendString(s);
+                break;
+            case 'd':
+                d = va_arg(ap, int);
+                sendInt(d);
+                break;
+			case 'c':
+                d = va_arg(ap, char);
+                sendInt(d);
+                break;
+            /* Add other specifiers here... */             
+            default: 
+                sendSerialByte(*(fmt-1));
+				sendSerialByte(*fmt);
+                break;
+        }
+        fmt++;
+    }
+    va_end(ap);
+    return 1;   /* Dummy return value */
+}
+
 
 
 void delay()
@@ -24,21 +67,23 @@ void delay()
 	for(i=0;i<255;i++);
 }
 
-unsigned char get_count(int mount)
+
+
+void time_second()
 {
-    int mycount;
-    if(count>mount){
-	    delay();
-		mycount=count;
-		delay();
-	    mycount-=mount;
-		count=mycount;
-		return 1;
-    }
-	return 0;
+    while(1){
+	    if(intrpt_count>SECOND_COUNTS){
+		    intrpt_count=0;
+			time_sec++;
+			SECOND_LED=!SECOND_LED;
+			//printk("%d\r\n",*((int*)((&time_sec)+4)));
+			//printk("%d%d\r\n",time_sec);
+			//sendInt(*((int*)(&time_sec)+1));
+			//sendInt(7);
+			//printk("dd\n\r");
+		}
+	}
 }
-
-
 
 void task1(void)
 {
@@ -49,41 +94,19 @@ void task1(void)
 	        P1_0=!P1_0;
 	}
 */
-    int get=800;
-	P1_1=0;
-	task1ct=0;
+	P1_1=1;
 	while(1){
-	  if(get_count(get)){
-		P1_1=1;
-		task1ct=1;
+	  if(!P1_1){
+		printk("P1_1 down!\r\n");
       }
-sendString("ssssss,from task 111111\r\n");
+//sendString("ssssss,from task 111111\r\n");
        //switch_task();
     }
 }
 
 void task2(void)
 {
-    int j;
-/*
-	while(1){
-	    if(++task2ct>task1ct)
-	        P1_1=!P1_1;
-	}
-	*/
-	int get=900;
-	P1_1=0;
-	task2ct=0;
-	while(1){
-	  if(get_count(get)){
-		P1_1=1;
-		task2ct=1;
-      }
-	  P1_2=!P1_2;
-        //for (j=0;j<254;j++)	delay();
-	    sendString("ssssss,from task 22222\r\n");
-       //switch_task();
-	}
+
 }
 
 void add_task(void(*fun)(void))
@@ -92,6 +115,7 @@ void add_task(void(*fun)(void))
 	task_list[total_task].task_fun=fun;
 	task_list[total_task].regs_bak.sp=INIT_SP;
 	*(void**)(&(task_list[total_task].chip_ram[0x7f-INIT_SP-sizeof(fun)]))=fun;//make the value of sp pointing be addr of fun so when chip_ram restored PC will be fun
+	task_list[total_task].status=0;
 	//f=&(task_list[total_task].chip_ram[INIT_SP]);
 	//	f=fun;
 	total_task++;
@@ -127,24 +151,28 @@ void main()
 	TR1=1;//start timer 1
 	TI=1;
 
+	printk("Hello, this is CleanOS@51 V%s\r\n",VERSION);
+
 	//SP=INIT_SP;
 	total_task=1;
 
 	cur_task_index=0;
+	add_task(time_second);
 	add_task(task1);
-	add_task(task2);
+	//add_task(task2);
+
+
 
 	EA=1;
 	TR0=1;//start the time0 interrupt
-	sendString("Hello\r\n");
+	printk("Now task start runing ...\r\n");
     while(1)
     {
-        //for (j=0;j<254;j++)	delay();
-	    sendString("Hello, this is from task 0\r\n");
+        for (j=0;j<254;j++)	delay();
+	    //sendString("Hello, this is from task 0\r\n");
         //switch_task();
         //P1_2=!P1_2;
     }
 	return;
 }
-
 
