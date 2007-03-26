@@ -49,6 +49,10 @@ Retn: none
 ***********************************************************************************/
 void sendString(uch *c);
 
+uch received();
+
+void prepSerialRecv();
+
 void sendInt(int i);
 
 #endif

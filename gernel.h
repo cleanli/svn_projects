@@ -7,6 +7,7 @@
 #define MAX_TASK 4
 #define SECOND_COUNTS 223
 #define SECOND_LED P1_2
+#define MAX_COM_LEN 0x80
 
 struct regs{
     unsigned char psw;//0x80

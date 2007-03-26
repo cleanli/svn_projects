@@ -4,7 +4,7 @@
 #include "initial.h"
 #include "gnlserial.h"
 #include "stdarg.h"
-//#include "gnlstring.h"
+#include "gnlstring.h"
 
 
 xdata unsigned char total_task;
@@ -14,10 +14,12 @@ xdata unsigned char is_timer0_int;
 xdata unsigned int task1ct=0,task2ct=0;
 xdata unsigned char intrpt_count;
 xdata unsigned long time_sec;
+xdata unsigned char command_buf[MAX_COM_LEN];
+xdata unsigned char com_buf_p;
 
 xdata int count=1000;
 
- 
+void handle_cmd(); 
 
 int printk(const char * fmt, ...)
 {
@@ -46,6 +48,10 @@ int printk(const char * fmt, ...)
 			case 'c':
                 d = va_arg(ap, char);
                 sendInt(d);
+                break;
+			case 'x':
+                d = va_arg(ap, char);
+                sendASCByte(d);
                 break;
             /* Add other specifiers here... */             
             default: 
@@ -78,6 +84,7 @@ void time_second()
 			SECOND_LED=!SECOND_LED;
 			//printk("%d\r\n",*((int*)((&time_sec)+4)));
 			//printk("%d%d\r\n",time_sec);
+			//printk("%x%x%x%x\r\n",time_sec);
 			//sendInt(*((int*)(&time_sec)+1));
 			//sendInt(7);
 			//printk("dd\n\r");
@@ -128,7 +135,7 @@ void add_task(void(*fun)(void))
 
 void main()
 {
-    unsigned char j;
+    unsigned char tmp;
  /*
     while(1)
     {
@@ -150,8 +157,9 @@ void main()
 	TL1=TH1;//19200,11.0592
 	TR1=1;//start timer 1
 	TI=1;
+    prepSerialRecv();
 
-	printk("Hello, this is CleanOS@51 V%s\r\n",VERSION);
+	printk("\r\n\r\nHello, this is CleanOS@51 V%s\r\n",VERSION);
 
 	//SP=INIT_SP;
 	total_task=1;
@@ -165,14 +173,39 @@ void main()
 
 	EA=1;
 	TR0=1;//start the time0 interrupt
+
+	//shell like interface
 	printk("Now task start runing ...\r\n");
+	com_buf_p=0;
+	lmemset(command_buf,0,MAX_COM_LEN);
+	printk("CleanOS@51>");
     while(1)
     {
-        for (j=0;j<254;j++)	delay();
-	    //sendString("Hello, this is from task 0\r\n");
-        //switch_task();
-        //P1_2=!P1_2;
+		while(!received());
+		prepSerialRecv();
+		tmp=SBUF;
+		if(tmp != 0x0d){
+		    if(com_buf_p<MAX_COM_LEN-1){
+			    command_buf[com_buf_p++]=tmp;
+                sendSerialByte(tmp);
+			}
+		}
+		else{
+            handle_cmd();
+			lmemset(command_buf,0,MAX_COM_LEN);
+            printk("CleanOS@51>");
+			com_buf_p=0;
+		}    
+		//printk("Received Byte 0x%x\r\n",tmp);
     }
 	return;
+}
+
+void handle_cmd()
+{
+    printk("\r\n");
+	if(!command_buf[0])return;
+	if(!lstrcmp(command_buf,"time"))printk("The count is %d%d\r\n",time_sec);
+    else printk("Unknow command:%s\r\n",command_buf);
 }
 

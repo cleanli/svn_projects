@@ -39,9 +39,9 @@ bit sent()
 	return TI;
 }
 
-bit received()
+uch received()
 {
-	return RI;
+	return RI?1:0;
 }
 
 void send(uch a)
@@ -130,13 +130,13 @@ uch recvSerial(uch *m,uch maxlen)
 	while(n<maxlen && (recvSerialByte(m++)))n++;
 	return n;
 }	 
-
+ */
 bit sendASCByte(uch n)
 {
 	uch cT[2];
 	if(sendSerial(dByte2Str(n,cT),2)<2)return 0;
 	return 1;
-}	 */
+}	
 
 void sendString(uch *c)
 {
