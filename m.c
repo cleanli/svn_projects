@@ -5,6 +5,7 @@
 #include "gnlserial.h"
 #include "stdarg.h"
 #include "gnlstring.h"
+#include "atomic.h"
 
 
 xdata unsigned char total_task;
@@ -20,6 +21,18 @@ xdata unsigned char com_buf_p;
 xdata int count=1000;
 
 void handle_cmd(); 
+void print_time();
+void print_help();
+void print_task();
+
+const struct command cmd_list[]=
+{
+    {"time",print_time},
+	{"help",print_help},
+	{"ps",print_task}
+};
+
+
 
 int printk(const char * fmt, ...)
 {
@@ -67,14 +80,6 @@ int printk(const char * fmt, ...)
 
 
 
-void delay()
-{
-    unsigned char i;
-	for(i=0;i<255;i++);
-}
-
-
-
 void time_second()
 {
     while(1){
@@ -92,7 +97,7 @@ void time_second()
 	}
 }
 
-void task1(void)
+void p11m(void)
 {
 //    int i;
 /*
@@ -110,19 +115,59 @@ void task1(void)
        //switch_task();
     }
 }
+xdata uch test_sleep[MAX_TASK];
+xdata atomic test_lock;
 
-void task2(void)
+void open()
 {
-
+     while(atomic_test_inc(&test_lock)){
+         printk("%c pending\r\n",cur_task_index);
+	     task_sleep(test_sleep);
+	 }
+	 printk("%c open\r\n",cur_task_index);
 }
 
-void add_task(void(*fun)(void))
+void close()
+{
+     printk("%c close\r\n",cur_task_index);
+	 atomic_dec(&test_lock);
+     task_wake(test_sleep);
+}
+
+void delay(unsigned sec)
+{
+	long tmp;
+	tmp=time_sec;
+	while(time_sec<tmp+10);
+}
+
+void task1(void)
+{   
+	while(1){
+      open();
+	  delay(10);
+	  close();
+	  delay(3);
+    }
+}
+void task2(void)
+{
+	while(1){
+      open();
+	  delay(6);
+	  close();
+	  delay(5);
+    }
+}
+
+void add_task(void(*fun)(void),unsigned char * name)
 {
     //void * f;
 	task_list[total_task].task_fun=fun;
 	task_list[total_task].regs_bak.sp=INIT_SP;
 	*(void**)(&(task_list[total_task].chip_ram[0x7f-INIT_SP-sizeof(fun)]))=fun;//make the value of sp pointing be addr of fun so when chip_ram restored PC will be fun
 	task_list[total_task].status=0;
+	task_list[total_task].task_name=name;
 	//f=&(task_list[total_task].chip_ram[INIT_SP]);
 	//	f=fun;
 	total_task++;
@@ -161,12 +206,14 @@ void main()
 
 	printk("\r\n\r\nHello, this is CleanOS@51 V%s\r\n",VERSION);
 
-	//SP=INIT_SP;
+	SP=INIT_SP;
 	total_task=1;
-
 	cur_task_index=0;
-	add_task(time_second);
-	add_task(task1);
+    task_list[0].task_name="Shell like Interface";
+	add_task(time_second,"Timer counter");
+	add_task(p11m,"P1.1 monitor");
+	add_task(task1,"1");
+	add_task(task2,"2");
 	//add_task(task2);
 
 
@@ -179,6 +226,7 @@ void main()
 	com_buf_p=0;
 	lmemset(command_buf,0,MAX_COM_LEN);
 	printk("CleanOS@51>");
+	//lstrcmp("time","time");
     while(1)
     {
 		while(!received());
@@ -203,9 +251,40 @@ void main()
 
 void handle_cmd()
 {
+    unsigned char i;
     printk("\r\n");
 	if(!command_buf[0])return;
-	if(!lstrcmp(command_buf,"time"))printk("The count is %d%d\r\n",time_sec);
-    else printk("Unknow command:%s\r\n",command_buf);
+    for(i=0;i<TOTAL_CMDS;i++){
+	    if(!lstrcmp(command_buf,cmd_list[i].cmd_name)){
+            cmd_list[i].cmd_fun();
+            return;
+        }
+    }
+//if(!lstrcmp(command_buf,"time"))printk("The count is ");
+    printk("Unknow command:%s\r\n",command_buf);
+}
+
+void print_time()
+{
+    printk("Now count is %d%d\r\n",time_sec);
+}
+
+void print_help()
+{
+    unsigned char i;
+    for(i=0;i<TOTAL_CMDS;i++){
+	    printk("%s\r\n",cmd_list[i].cmd_name);
+    }
+}
+
+void print_task()
+{
+    unsigned char i;
+	char ** task_status[]={"Running","Pending"};
+
+	printk ("PID\tStatus\tName\r\n");
+    for(i=0;i<total_task;i++){
+	    printk("%c\t%s\t%s\r\n",i,task_status[task_list[i].status],task_list[i].task_name);
+    }
 }
 

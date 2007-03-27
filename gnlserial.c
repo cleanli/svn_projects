@@ -4,8 +4,8 @@
 #include "gnlasc.h"
 #include "atomic.h"
 
-xdata atomic lock;
-xdata uch serial_sleep[4]={0,0,0,0};
+
+
 extern xdata unsigned long time_sec;
 static xdata unsigned long delayct;
 
@@ -90,20 +90,8 @@ uch sendSerial(uch *m,uch n)
 {
 	uch a=0;
     
-/*
-    EA=0;
-    if(lock!=0)
-    {
-        EA=1;
-        while(lock!=0);
-		lock=1;
-    }else{
-        EA=1;
-        lock=1;
-    }
-    
-*/
-	//spin_lock(&lock);
+
+
 //    while(atomic_test_inc(&lock))
 //        task_sleep(serial_sleep);
 	while(n-->0)

@@ -195,7 +195,7 @@ FROM_TIMER0:
 get_addr:
 	MOV  	DPTR,#cur_task_index
 	MOVX 	A,@DPTR
-	MOV  	B,#08AH
+	MOV  	B,#08DH
 	MUL  	AB
 	ADD  	A,#LOW (task_list)
 	MOV  	DPL,A

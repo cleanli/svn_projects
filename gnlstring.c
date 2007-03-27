@@ -41,7 +41,7 @@ uch* lmemset(uch *s,uch vl,uch n)
 uch lstrcmp(uch * a, uch * b)
 {
     while(*a && *b){
-        if(*a != *b)return 1;
+        if(*a++ != *b++)return 1;
     }
     return (*a == *b)?0:1;
 }

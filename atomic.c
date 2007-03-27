@@ -3,7 +3,7 @@
 #include "gernel.h"
 extern xdata unsigned char cur_task_index;
 extern xdata struct task task_list[4];
-
+xdata atomic task_data_lock;
 
 static xdata unsigned char ea_bak;
 
@@ -60,19 +60,23 @@ void spin_unlock(atomic*l)
 void task_sleep(unsigned char * q)
 {
     unsigned char i=0;
+    spin_lock(&task_data_lock);
     while(q[i]!=0)i++;
     q[i]=cur_task_index+1;
     task_list[cur_task_index].status=1;
+    spin_unlock(&task_data_lock);
     switch_task();
 }
 
 void task_wake(unsigned char * q)
 {
     unsigned char i=0;
+    spin_lock(&task_data_lock);
 	for(i=0;i<4;i++){
         if(q[i]!=0){
 	        task_list[q[i]-1].status=0;
 		    q[i]=0;
 		}
 	}
+    spin_unlock(&task_data_lock);
 }
