@@ -138,7 +138,7 @@ void delay(unsigned sec)
 {
 	long tmp;
 	tmp=time_sec;
-	while(time_sec<tmp+10);
+	while(time_sec<tmp+sec);
 }
 
 void task1(void)
