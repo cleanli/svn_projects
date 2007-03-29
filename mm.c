@@ -10,14 +10,14 @@
 
 
 //xdata unsigned char mem_list[MEM_LIST_SIZE];
-xdata atomic mem_has_initilized=0;
+xdata atomic mem_has_initilized = 0;
+xdata atomic mem_being_kmalloc = 0;
 
 void * kmalloc(unsigned int bytes)
 {
-    unsigned int size;
-    unsigned int new_size;
-    unsigned char available;
-    void xdata * current_location = MEM_START;
+    unsigned int size,new_size,next_size;
+    unsigned char available, next_available;
+    void xdata * current_location = MEM_START, * next_location;
 
     if(!atomic_test_inc(&mem_has_initilized)){
             *(unsigned int *)current_location=MEM_SIZE;
@@ -26,19 +26,38 @@ void * kmalloc(unsigned int bytes)
     if(bytes < (unsigned int)MEM_BLOCK_BYTE){
 	    bytes = MEM_BLOCK_BYTE;
 	}
-    size = (unsigned int)((*(unsigned int *)current_location)&0x7fff);
-    available = ((*(unsigned char*)current_location)&0x10)?0:1;
-    while( !available || size < (bytes + 2)){
-        current_location += size;      
-        if(current_location == 0)return 0;//out of mem
-        size = (unsigned int)(*(unsigned int *)current_location) & 0x7fff;
-        available = ((*(unsigned char*)current_location) & 0x10)?0:1;
-    }
-    if(( new_size = (size-bytes)) >= MEM_BLOCK_BYTE){
+
+	spin_lock(&mem_being_kmalloc);
+    do{
+        size = (unsigned int)((*(unsigned int *)current_location)&0x7fff);
+        available = ((*(unsigned char*)current_location)&0x10)?0:1;
+		if(available){
+			do{//connect all later available block to one big block
+				next_location = current_location + size;
+				next_available = ((*(unsigned char*)next_location)&0x10)?0:1;
+				if(!next_available){
+				    *(unsigned int *)(current_location)= size;
+					break;
+				}
+				size += *((unsigned int *)next_location);
+			}while(1);
+			if(size > bytes)break;//we find it
+		}
+ 		current_location += size;
+	    if(current_location == 0)return 0;//out of mem
+    }while(1);
+    if(( new_size = (size - bytes)) >= MEM_BLOCK_BYTE){
 	    /*splite out new block*/
-        *(unsigned int *)(current_location+bytes)=new_size;
-        *(unsigned int *)(current_location)=bytes;
+        *(unsigned int *)(current_location + bytes)= new_size; //new block can be used
+        *(unsigned int *)(current_location)= (0x8000 + bytes); //used
     }
-	(*(unsigned int *)(current_location)) |= (0x1000);
+	spin_unlock(&mem_being_kmalloc);
+
     return (current_location + 2);
+}
+
+void kfree(void * p)
+{
+    p -= 2;
+    *((unsigned int *)p) &= (0x7fff);
 }

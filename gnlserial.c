@@ -48,12 +48,12 @@ void send(uch a)
 {
 	SBUF=a;
 }
-
+/*
 uch getRecv()
 {
 	return SBUF;
 }
-
+*/
 bit sendSerialByte(uch n)
 {
 	resetCounter();

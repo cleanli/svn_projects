@@ -18,6 +18,7 @@ xdata unsigned long time_sec;
 xdata unsigned char command_buf[MAX_COM_LEN];
 xdata unsigned char com_buf_p;
 
+
 xdata int count=1000;
 
 void handle_cmd(); 
@@ -177,10 +178,11 @@ void add_task(void(*fun)(void),unsigned char * name)
 }
 
 
-
+void * kmalloc(unsigned int bytes);
 void main()
 {
     unsigned char tmp;
+	int * mem_malloc_test;
  /*
     while(1)
     {
@@ -188,6 +190,8 @@ void main()
         P1_2=!P1_2;
     }
 	*/
+    mem_malloc_test=(int*)kmalloc(40);
+
 	EA=0;
 	TMOD=0x21;
 	TH0=TIMER;

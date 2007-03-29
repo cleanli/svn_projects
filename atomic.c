@@ -72,7 +72,7 @@ void task_wake(unsigned char * q)
 {
     unsigned char i=0;
     spin_lock(&task_data_lock);
-	for(i=0;i<4;i++){
+	for(i=0;i<MAX_TASK;i++){
         if(q[i]!=0){
 	        task_list[q[i]-1].status=0;
 		    q[i]=0;
