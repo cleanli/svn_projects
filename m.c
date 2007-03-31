@@ -6,11 +6,13 @@
 #include "stdarg.h"
 #include "gnlstring.h"
 #include "atomic.h"
+#include "mm.h"
 
 
 xdata unsigned char total_task;
-xdata struct task task_list[MAX_TASK];
-xdata unsigned char cur_task_index;
+//xdata struct task task_list[MAX_TASK];
+xdata struct task xdata* task_head=NULL;
+xdata struct task xdata* cur_task=NULL;
 xdata unsigned char is_timer0_int;
 xdata unsigned int task1ct=0,task2ct=0;
 xdata unsigned char intrpt_count;
@@ -116,21 +118,21 @@ void p11m(void)
        //switch_task();
     }
 }
-xdata uch test_sleep[MAX_TASK];
-xdata atomic test_lock;
 
+xdata atomic test_lock;
+xdata struct quene xdata* test_sleep=NULL;
 void open()
 {
      while(atomic_test_inc(&test_lock)){
-         printk("%c pending\r\n",cur_task_index);
+         printk("%s pending\r\n",cur_task->task_name);
 	     task_sleep(test_sleep);
 	 }
-	 printk("%c open\r\n",cur_task_index);
+	 printk("%s open\r\n",cur_task->task_name);
 }
 
 void close()
 {
-     printk("%c close\r\n",cur_task_index);
+     printk("%s close\r\n",cur_task->task_name);
 	 atomic_dec(&test_lock);
      task_wake(test_sleep);
 }
@@ -161,28 +163,39 @@ void task2(void)
     }
 }
 
-void add_task(void(*fun)(void),unsigned char * name)
+void * kmalloc(unsigned int bytes);
+
+int add_task(void(*fun)(void),unsigned char * name)
 {
     //void * f;
-	task_list[total_task].task_fun=fun;
-	task_list[total_task].regs_bak.sp=INIT_SP;
-	*(void**)(&(task_list[total_task].chip_ram[0x7f-INIT_SP-sizeof(fun)]))=fun;//make the value of sp pointing be addr of fun so when chip_ram restored PC will be fun
-	task_list[total_task].status=0;
-	task_list[total_task].task_name=name;
+    struct task *new = (struct task *)kmalloc(sizeof(struct task));
+
+    if(new == 0)return -1;
+	new->task_fun=fun;
+	new->regs_bak.sp=INIT_SP;
+	*(void**)(&(new->chip_ram[0x7f-INIT_SP-sizeof(fun)]))=fun;//make the value of sp pointing be addr of fun so when chip_ram restored PC will be fun
+	new->status=0;
+	new->task_name=name;
+    new->next_task=task_head;
+    task_head=new;
 	//f=&(task_list[total_task].chip_ram[INIT_SP]);
 	//	f=fun;
-	total_task++;
+	//total_task++;
 	//sendString("Adding task");
 	//sendInt(total_task);
     //sendString("\r\n");
+//	nexttask:
+//	cur_task=cur_task->next_task;
+//	if(cur_task == NULL)cur_task=task_head;
+//	if(!cur_task -> status)goto nexttask;
 }
 
 
-void * kmalloc(unsigned int bytes);
+
 void main()
 {
     unsigned char tmp;
-	int * mem_malloc_test;
+
  /*
     while(1)
     {
@@ -190,8 +203,8 @@ void main()
         P1_2=!P1_2;
     }
 	*/
-    mem_malloc_test=(int*)kmalloc(40);
 
+    
 	EA=0;
 	TMOD=0x21;
 	TH0=TIMER;
@@ -208,17 +221,22 @@ void main()
 	TI=1;
     prepSerialRecv();
 
-	printk("\r\n\r\nHello, this is CleanOS@51 V%s\r\n",VERSION);
 
+	printk("\r\n\r\nHello, this is CleanOS@51 V%s\r\n",VERSION);
+    cur_task=task_head;
 	SP=INIT_SP;
-	total_task=1;
-	cur_task_index=0;
-    task_list[0].task_name="Shell like Interface";
+	//total_task=1;
+
+    add_task(main,"Shell like Interface");
+	cur_task=task_head;
+
 	add_task(time_second,"Timer counter");
 	add_task(p11m,"P1.1 monitor");
 	add_task(task1,"1");
 	add_task(task2,"2");
 	//add_task(task2);
+//	printk("now free meme is %d Bts\r\n",get_free());
+//		printk("%d bytes free\r\n",get_free());
 
 
 
@@ -288,7 +306,7 @@ void print_task()
 
 	printk ("PID\tStatus\tName\r\n");
     for(i=0;i<total_task;i++){
-	    printk("%c\t%s\t%s\r\n",i,task_status[task_list[i].status],task_list[i].task_name);
+//	    printk("%c\t%s\t%s\r\n",i,task_status[task_list[i].status],task_list[i].task_name);
     }
 }
 

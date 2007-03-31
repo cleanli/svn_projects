@@ -1,7 +1,7 @@
 #ifndef _GERNEL_H
 #define _GERNEL_H
 
-#define INIT_SP 0x50
+#define INIT_SP 0x5d
 #define TIMER 0xe0
 #define VERSION "0.3"
 #define MAX_TASK 5
@@ -27,6 +27,7 @@ struct task{
 	 void (*task_fun)(void);//0x86-0x88
      unsigned char status;//0x89
 	 unsigned char *task_name;
+     struct task xdata * next_task;
 };
 
 struct command{

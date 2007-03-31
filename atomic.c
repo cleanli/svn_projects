@@ -1,8 +1,10 @@
 #include "atomic.h"
 #include "at89x51.h"
 #include "gernel.h"
-extern xdata unsigned char cur_task_index;
-extern xdata struct task task_list[4];
+#include "mm.h"
+#include <stdlib.h>
+extern xdata struct task xdata*  cur_task;
+extern xdata struct task xdata* task_head;
 xdata atomic task_data_lock;
 
 static xdata unsigned char ea_bak;
@@ -57,26 +59,30 @@ void spin_unlock(atomic*l)
     atomic_dec(l);
 }
 
-void task_sleep(unsigned char * q)
+void task_sleep(struct quene ** q)
 {
-    unsigned char i=0;
-    spin_lock(&task_data_lock);
-    while(q[i]!=0)i++;
-    q[i]=cur_task_index+1;
-    task_list[cur_task_index].status=1;
+    struct quene * new =(struct quene * ) kmalloc(sizeof(struct quene));
+
+	spin_lock(&task_data_lock);
+	new->next=*q;
+	*q=new;
+	new->task_p=cur_task;
+	cur_task->status = 1;
     spin_unlock(&task_data_lock);
     switch_task();
 }
 
-void task_wake(unsigned char * q)
+void task_wake(struct quene ** q)
 {
-    unsigned char i=0;
+    struct quene * tmp_q;
     spin_lock(&task_data_lock);
-	for(i=0;i<MAX_TASK;i++){
-        if(q[i]!=0){
-	        task_list[q[i]-1].status=0;
-		    q[i]=0;
-		}
+    while(*q != NULL)
+    {
+	    (*q)->task_p->status=0;
+		tmp_q=*q;
+		*q=(*q)->next;
+		kfree(tmp_q);
 	}
+
     spin_unlock(&task_data_lock);
 }

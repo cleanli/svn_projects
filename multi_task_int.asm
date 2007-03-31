@@ -49,9 +49,8 @@ TIMER_SWITCH_TASK:
 
 
 ?PR?SWITCH_TASK         SEGMENT CODE 
-	EXTRN	XDATA (task_list)
-	EXTRN	XDATA (cur_task_index)
-	EXTRN   XDATA (total_task)
+	EXTRN	XDATA (task_head)
+	EXTRN	XDATA (cur_task)
 	PUBLIC	SWITCH_TASK
 ; #include "global.h"
         TIMER EQU 0xe0
@@ -72,7 +71,7 @@ switch_task:
 			; SOURCE LINE # 5
 ; task_list[cur_task_index].task_fun=task1;
 			; SOURCE LINE # 5
-        LCALL   get_addr
+        LCALL   new_get_addr
 	MOV     B,AR0     ;bak r0
 	MOV     R0,#7FH
 loop1:
@@ -107,30 +106,63 @@ loop2:
 	MOV     A,R1
 	MOVX    @DPTR,A ;current PC stored
 
-next_task:
-;   cur_task_index++;
-	MOV  	DPTR,#cur_task_index
+nexttask:
+; 	cur_task=cur_task->next_task;
+			; SOURCE LINE # 186
+	MOV  	DPTR,#cur_task
 	MOVX 	A,@DPTR
-	INC  	A
-	MOVX 	@DPTR,A
-; 	if(cur_task_index==total_task)cur_task_index=0;
-	MOV  	DPTR,#total_task
+	MOV  	R6,A
+	INC  	DPTR
+	MOVX 	A,@DPTR
+	ADD  	A,#08DH
+	MOV  	DPL,A
+	CLR  	A
+	ADDC 	A,R6
+	MOV  	DPH,A
+	MOVX 	A,@DPTR
+	MOV  	R6,A
+	INC  	DPTR
 	MOVX 	A,@DPTR
 	MOV  	R7,A
-	MOV  	DPTR,#cur_task_index
-	MOVX 	A,@DPTR
-	CJNE 	A,AR7,?C0002
-	CLR  	A
+	MOV  	DPTR,#cur_task
+	MOV  	A,R6
 	MOVX 	@DPTR,A
+	INC  	DPTR
+	MOV  	A,R7
+	MOVX 	@DPTR,A
+; 	if(cur_task == NULL)cur_task=task_head;
+			; SOURCE LINE # 187
+	ORL  	A,R6
+	JNZ  	L36
+	MOV  	DPTR,#task_head
+	MOVX 	A,@DPTR
+	MOV  	R7,A
+	INC  	DPTR
+	MOVX 	A,@DPTR
+	MOV  	DPTR,#cur_task
+	XCH  	A,R7
+	MOVX 	@DPTR,A
+	INC  	DPTR
+	MOV  	A,R7
+	MOVX 	@DPTR,A
+L36:
+; 	if(cur_task -> status)goto nexttask;
+			; SOURCE LINE # 188
+	MOV  	DPTR,#cur_task
+	MOVX 	A,@DPTR
+	MOV  	R7,A
+	MOV     B,A
+	INC  	DPTR
+	MOVX 	A,@DPTR
+	MOV     R6,A
+	ADD  	A,#089H
+	MOV  	DPL,A
+	CLR  	A
+	ADDC 	A,B
+	MOV  	DPH,A
+	MOVX 	A,@DPTR
+	JNZ   	nexttask
 
-?C0002:
-        LCALL   get_addr
-	MOV     R6,DPL
-	MOV     R7,DPH    ;bak THE ADDR
-	MOV     A,#0x89
-	LCALL   add_dptr
-	MOVX    A,@DPTR
-	JNZ     next_task  ;the task pending
 	LCALL   dec_dptr
 
 	MOVX    A,@DPTR   ;;last byte of task_fun
@@ -192,16 +224,30 @@ FROM_TIMER0:
 	SETB    EA
 	RETI 
 
-get_addr:
-	MOV  	DPTR,#cur_task_index
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+new_get_addr:
+	MOV  	DPTR,#cur_task
 	MOVX 	A,@DPTR
-	MOV  	B,#08DH
-	MUL  	AB
-	ADD  	A,#LOW (task_list)
+	MOV  	B,A
+	INC     DPTR
+	MOVX  	A,@DPTR
 	MOV  	DPL,A
-	MOV  	A,B
-	ADDC 	A,#HIGH (task_list)
-	MOV  	DPH,A
+	MOV     A,B
+	MOV     DPH,A
 	RET
 
 dec_dptr:

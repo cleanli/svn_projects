@@ -15,7 +15,7 @@ xdata atomic mem_being_kmalloc = 0;
 
 void * kmalloc(unsigned int bytes)
 {
-    unsigned int size,new_size,next_size;
+    unsigned int size,new_size;
     unsigned char available, next_available;
     void xdata * current_location = MEM_START, * next_location;
 
@@ -30,11 +30,12 @@ void * kmalloc(unsigned int bytes)
 	spin_lock(&mem_being_kmalloc);
     do{
         size = (unsigned int)((*(unsigned int *)current_location)&0x7fff);
-        available = ((*(unsigned char*)current_location)&0x10)?0:1;
+        available = ((*(unsigned char*)current_location)&0x80)?0:1;
 		if(available){
 			do{//connect all later available block to one big block
 				next_location = current_location + size;
-				next_available = ((*(unsigned char*)next_location)&0x10)?0:1;
+				if(next_location == 0)break;
+				next_available = ((*(unsigned char*)next_location)&0x80)?0:1;
 				if(!next_available){
 				    *(unsigned int *)(current_location)= size;
 					break;
@@ -60,4 +61,20 @@ void kfree(void * p)
 {
     p -= 2;
     *((unsigned int *)p) &= (0x7fff);
+}
+
+unsigned get_free()
+{
+    unsigned int size,total_size;
+    unsigned char available;
+    void xdata * current_location = MEM_START;
+
+	total_size = 0;
+    do{
+        size = (unsigned int)((*(unsigned int *)current_location)&0x7fff);
+        available = ((*(unsigned char*)current_location)&0x80)?0:1;
+		if(available)total_size += size;
+ 		current_location += size;
+	    if(current_location == 0)return total_size;//out of mem
+    }while(1);
 }
