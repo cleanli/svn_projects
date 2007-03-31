@@ -19,7 +19,7 @@ uch* dByte2Str(uch b,uch*s)
 	*s=sByte2Asc(b);
 	return s;
 }
-
+/*
 uch sASC2Byte(uch*s)
 {
 	uch tmp;
@@ -37,7 +37,7 @@ uch sASC2Byte(uch*s)
 		return 0;
 	}
 }
- /*
+ 
 uch dASC2Byte(uch*s)
 {
 	uch a=0;

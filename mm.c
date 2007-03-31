@@ -13,11 +13,12 @@
 xdata atomic mem_has_initilized = 0;
 xdata atomic mem_being_kmalloc = 0;
 
-void * kmalloc(unsigned int bytes)
+void xdata* kmalloc(unsigned int bytes)
 {
     unsigned int size,new_size;
     unsigned char available, next_available;
-    void xdata * current_location = MEM_START, * next_location;
+    void xdata * current_location = MEM_START;
+    void xdata * next_location;
 
     if(!atomic_test_inc(&mem_has_initilized)){
             *(unsigned int *)current_location=MEM_SIZE;
@@ -57,7 +58,7 @@ void * kmalloc(unsigned int bytes)
     return (current_location + 2);
 }
 
-void kfree(void * p)
+void kfree(void xdata* p)
 {
     p -= 2;
     *((unsigned int *)p) &= (0x7fff);

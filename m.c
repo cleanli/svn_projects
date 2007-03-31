@@ -9,14 +9,14 @@
 #include "mm.h"
 
 
-xdata unsigned char total_task;
+xdata unsigned char cur_pid;
 //xdata struct task task_list[MAX_TASK];
 xdata struct task xdata* task_head=NULL;
 xdata struct task xdata* cur_task=NULL;
-xdata unsigned char is_timer0_int;
+xdata unsigned char soft_int;
 xdata unsigned int task1ct=0,task2ct=0;
 xdata unsigned char intrpt_count;
-xdata unsigned long time_sec;
+xdata unsigned int time_sec;
 xdata unsigned char command_buf[MAX_COM_LEN];
 xdata unsigned char com_buf_p;
 
@@ -27,17 +27,19 @@ void handle_cmd();
 void print_time();
 void print_help();
 void print_task();
+void print_free();
 
 const struct command cmd_list[]=
 {
     {"time",print_time},
 	{"help",print_help},
-	{"ps",print_task}
+	{"ps",print_task},
+	{"free",print_free},
 };
 
 
 
-int printk(const char * fmt, ...)
+int printk(const char code* fmt, ...)
 {
     xdata const char *s;
     xdata int d;
@@ -92,7 +94,7 @@ void time_second()
 			SECOND_LED=!SECOND_LED;
 			//printk("%d\r\n",*((int*)((&time_sec)+4)));
 			//printk("%d%d\r\n",time_sec);
-			//printk("%x%x%x%x\r\n",time_sec);
+			printk("%x%x\r\n",time_sec);
 			//sendInt(*((int*)(&time_sec)+1));
 			//sendInt(7);
 			//printk("dd\n\r");
@@ -125,7 +127,7 @@ void open()
 {
      while(atomic_test_inc(&test_lock)){
          printk("%s pending\r\n",cur_task->task_name);
-	     task_sleep(test_sleep);
+	     task_sleep(&test_sleep);
 	 }
 	 printk("%s open\r\n",cur_task->task_name);
 }
@@ -134,12 +136,12 @@ void close()
 {
      printk("%s close\r\n",cur_task->task_name);
 	 atomic_dec(&test_lock);
-     task_wake(test_sleep);
+     task_wake(&test_sleep);
 }
 
 void delay(unsigned sec)
 {
-	long tmp;
+	int tmp;
 	tmp=time_sec;
 	while(time_sec<tmp+sec);
 }
@@ -163,19 +165,22 @@ void task2(void)
     }
 }
 
-void * kmalloc(unsigned int bytes);
+void xdata* kmalloc(unsigned int bytes);
 
-int add_task(void(*fun)(void),unsigned char * name)
+int add_task(void(code*fun)(void),unsigned char * name)
 {
     //void * f;
-    struct task *new = (struct task *)kmalloc(sizeof(struct task));
+    struct task xdata*new = (struct task xdata*)kmalloc(sizeof(struct task));
 
     if(new == 0)return -1;
 	new->task_fun=fun;
-	new->regs_bak.sp=INIT_SP;
-	*(void**)(&(new->chip_ram[0x7f-INIT_SP-sizeof(fun)]))=fun;//make the value of sp pointing be addr of fun so when chip_ram restored PC will be fun
+	new->regs_bak.sp=INIT_SP+PUSHS_IN_INT;
+	//*(void**)(&(new->chip_ram[0x7f-INIT_SP-sizeof(fun)]))=fun;//make the value of sp pointing be addr of fun so when chip_ram restored PC will be fun
+	*(void**)(&(new->chip_ram[INIT_SP-1]))=fun;
+	*(void**)(&(new->chip_ram[INIT_SP-3]))=fun;
 	new->status=0;
 	new->task_name=name;
+	new->pid=cur_pid++;
     new->next_task=task_head;
     task_head=new;
 	//f=&(task_list[total_task].chip_ram[INIT_SP]);
@@ -204,13 +209,13 @@ void main()
     }
 	*/
 
-    
+    //PSW=0x08;
 	EA=0;
 	TMOD=0x21;
 	TH0=TIMER;
 	TL0=0;
 	ET0=1;
-	is_timer0_int=0;
+	soft_int=0;
 
 	//serialinitial
 	PCON|=0x80;//baute rate double				PCON(SMOD--- --- --- GF1 GF0 PD  IDL)(0XXX0000)
@@ -223,6 +228,7 @@ void main()
 
 
 	printk("\r\n\r\nHello, this is CleanOS@51 V%s\r\n",VERSION);
+	cur_pid=0;
     cur_task=task_head;
 	SP=INIT_SP;
 	//total_task=1;
@@ -249,6 +255,7 @@ void main()
 	lmemset(command_buf,0,MAX_COM_LEN);
 	printk("CleanOS@51>");
 	//lstrcmp("time","time");
+	print_help();
     while(1)
     {
 		while(!received());
@@ -301,12 +308,40 @@ void print_help()
 
 void print_task()
 {
-    unsigned char i;
-	char ** task_status[]={"Running","Pending"};
+    struct task xdata* t_p;
+	char code*code* task_status[]={"Running","Pending"};
 
-	printk ("PID\tStatus\tName\r\n");
-    for(i=0;i<total_task;i++){
-//	    printk("%c\t%s\t%s\r\n",i,task_status[task_list[i].status],task_list[i].task_name);
+	printk ("    PID\tStatus\tName\r\n");
+    for(t_p=task_head;t_p != NULL;t_p=t_p->next_task){
+	    printk("%c\t%s\t%s\r\n",t_p->pid,task_status[t_p->status],t_p->task_name);
     }
+}
+
+void print_free()
+{
+    printk("Free memory is %d bytes.\r\n",get_free());
+}
+
+void Timer0(void) interrupt 1 using 1
+{
+    unsigned char data * ci;
+	if(soft_int)
+	    soft_int=0;
+	else 
+	    intrpt_count++;
+    for(ci=0;ci<0x80;ci++)
+        cur_task->chip_ram[(unsigned char)ci]=*ci;
+    cur_task->regs_bak.sp=SP;
+
+    do{
+	    cur_task=cur_task->next_task;
+	    if(cur_task == NULL)cur_task=task_head;
+    }while(cur_task->status);
+
+    for(ci=0;ci<0x08;ci++)
+        *ci=cur_task->chip_ram[(unsigned char)ci];
+    for(ci=0x10;ci<0x80;ci++)
+        *ci=cur_task->chip_ram[(unsigned char)ci];
+    SP=cur_task->regs_bak.sp;
 }
 

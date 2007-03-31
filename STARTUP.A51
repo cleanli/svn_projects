@@ -60,9 +60,9 @@ PBPSTACKTOP     EQU     0FFFFH+1; set top of stack to highest location+1.
 ;  variables. The EQU PPAGE must conform with the PPAGE control used
 ;  in the linker invocation.
 ;
-PPAGEENABLE     EQU     0       ; set to 1 if pdata object are used.
+PPAGEENABLE     EQU     1       ; set to 1 if pdata object are used.
 ;
-PPAGE           EQU     0       ; define PPAGE number.
+PPAGE           EQU     90H       ; define PPAGE number.
 ;
 PPAGE_SFR       DATA    0A0H    ; SFR that supplies uppermost address byte
 ;               (most 8051 variants use P2 as uppermost address byte)

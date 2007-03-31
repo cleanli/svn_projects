@@ -224,21 +224,6 @@ FROM_TIMER0:
 	SETB    EA
 	RETI 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 new_get_addr:
 	MOV  	DPTR,#cur_task
 	MOVX 	A,@DPTR

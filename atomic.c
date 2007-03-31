@@ -3,8 +3,7 @@
 #include "gernel.h"
 #include "mm.h"
 #include <stdlib.h>
-extern xdata struct task xdata*  cur_task;
-extern xdata struct task xdata* task_head;
+
 xdata atomic task_data_lock;
 
 static xdata unsigned char ea_bak;
@@ -20,7 +19,11 @@ void int_restore()
     EA=(ea_bak!=0)?1:0;
 }
 
-void switch_task();
+void switch_task()
+{
+    soft_int=1;
+    TF0=1;
+}
 /*
 void atomic_inc(atomic * s)
 {
@@ -30,14 +33,14 @@ void atomic_inc(atomic * s)
 	EA=CY;
 } */
 
-void atomic_dec(atomic * s)
+void atomic_dec(atomic xdata* s)
 {
     int_disable_store();
 	(*s)--;
 	int_restore();
 }
 
-unsigned char atomic_test_inc(atomic * lock)
+unsigned char atomic_test_inc(atomic xdata* lock)
 {
     int_disable_store();
 	if(!(*lock)){
@@ -49,17 +52,17 @@ unsigned char atomic_test_inc(atomic * lock)
 	    return 1;
     }
 }
-void spin_lock(atomic*l)
+void spin_lock(atomic xdata*l)
 {
     while(atomic_test_inc(l));
 }
 
-void spin_unlock(atomic*l)
+void spin_unlock(atomic xdata*l)
 {
     atomic_dec(l);
 }
 
-void task_sleep(struct quene ** q)
+void task_sleep(struct quene xdata** q)
 {
     struct quene * new =(struct quene * ) kmalloc(sizeof(struct quene));
 
@@ -72,7 +75,7 @@ void task_sleep(struct quene ** q)
     switch_task();
 }
 
-void task_wake(struct quene ** q)
+void task_wake(struct quene xdata** q)
 {
     struct quene * tmp_q;
     spin_lock(&task_data_lock);
