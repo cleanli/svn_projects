@@ -4,9 +4,9 @@
 #include "mm.h"
 #include <stdlib.h>
 
-xdata atomic task_data_lock;
+pdata atomic task_data_lock;
 
-static xdata unsigned char ea_bak;
+static pdata unsigned char ea_bak;
 
 void int_disable_store()
 {
@@ -33,14 +33,14 @@ void atomic_inc(atomic * s)
 	EA=CY;
 } */
 
-void atomic_dec(atomic xdata* s)
+void atomic_dec(atomic pdata* s)
 {
     int_disable_store();
 	(*s)--;
 	int_restore();
 }
 
-unsigned char atomic_test_inc(atomic xdata* lock)
+unsigned char atomic_test_inc(atomic pdata* lock)
 {
     int_disable_store();
 	if(!(*lock)){
@@ -52,33 +52,45 @@ unsigned char atomic_test_inc(atomic xdata* lock)
 	    return 1;
     }
 }
-void spin_lock(atomic xdata*l)
+void spin_lock(atomic pdata*l)
 {
     while(atomic_test_inc(l));
 }
 
-void spin_unlock(atomic xdata*l)
+void spin_irqsave_lock(atomic pdata*l)
+{
+    dont_switch_task=1;
+    while(atomic_test_inc(l));
+}
+
+void spin_unlock(atomic pdata*l)
 {
     atomic_dec(l);
 }
 
-void task_sleep(struct quene xdata** q)
+void spin_irqsave_unlock(atomic pdata*l)
 {
-    struct quene * new =(struct quene * ) kmalloc(sizeof(struct quene));
+    atomic_dec(l);
+	dont_switch_task=0;
+}
 
-	spin_lock(&task_data_lock);
+void task_sleep(struct quene xdata*pdata* q)
+{
+    struct quene xdata* new =(struct quene xdata* ) kmalloc(sizeof(struct quene));
+
+	spin_irqsave_lock(&task_data_lock);
 	new->next=*q;
 	*q=new;
 	new->task_p=cur_task;
 	cur_task->status = 1;
-    spin_unlock(&task_data_lock);
+    spin_irqsave_unlock(&task_data_lock);
     switch_task();
 }
 
-void task_wake(struct quene xdata** q)
+void task_wake(struct quene xdata*pdata* q)
 {
     struct quene * tmp_q;
-    spin_lock(&task_data_lock);
+    spin_irqsave_lock(&task_data_lock);
     while(*q != NULL)
     {
 	    (*q)->task_p->status=0;
@@ -87,5 +99,5 @@ void task_wake(struct quene xdata** q)
 		kfree(tmp_q);
 	}
 
-    spin_unlock(&task_data_lock);
+    spin_irqsave_unlock(&task_data_lock);
 }

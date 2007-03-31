@@ -8,18 +8,19 @@ struct quene{
 
 typedef unsigned char atomic;
 
-void atomic_inc(atomic xdata*);
-void atomic_dec(atomic xdata*);
+void atomic_inc(atomic pdata*);
+void atomic_dec(atomic pdata*);
 
-unsigned char atomic_test_inc(atomic xdata*);
+unsigned char atomic_test_inc(atomic pdata*);
 
-void spin_lock(atomic xdata*);
-void spin_unlock(atomic xdata*);
+void spin_lock(atomic pdata*);
+void spin_unlock(atomic pdata*);
 
-void task_sleep(struct quene xdata**);
-void task_wake(struct quene xdata**);
+void task_sleep(struct quene xdata*pdata*);
+void task_wake(struct quene xdata*pdata*);
 
-
+void spin_irqsave_lock(atomic pdata*l);
+void spin_irqsave_unlock(atomic pdata*l);
 
 
 #endif

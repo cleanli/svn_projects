@@ -26,7 +26,15 @@
      Parameter: uch* - The ASC byte address to be convert
      Return   : The result byte
      *****************************************************************************************/
-     uch sASC2Byte(uch*s);
+     uch sASC2Byte(uch xdata*s);
+
+     /*****************************************************************************************
+     Function : Convert an demic num string to byte data
+                For example: "19" --> 0x13   "9" --> 0x9    "p" -- > 0x0    "a" --> 0x0
+     Parameter: uch* - The ASC byte address to be convert
+     Return   : The result byte
+     *****************************************************************************************/
+     uch str_to_byte(uch xdata*s);
 
      /*****************************************************************************************
      Function : Convert two ASC byte to byte data

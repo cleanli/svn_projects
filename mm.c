@@ -10,8 +10,8 @@
 
 
 //xdata unsigned char mem_list[MEM_LIST_SIZE];
-xdata atomic mem_has_initilized = 0;
-xdata atomic mem_being_kmalloc = 0;
+pdata atomic mem_has_initilized = 0;
+pdata atomic mem_being_kmalloc = 0;
 
 void xdata* kmalloc(unsigned int bytes)
 {

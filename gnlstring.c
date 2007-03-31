@@ -30,13 +30,8 @@ uch* lmemcpy(uch *d,uch*s,uch n)
 	while(n-->0)*d++=*s++;
 	return p;
 }
-*/
-uch* lmemset(uch *s,uch vl,uch n)
-{
-	uch *p=s;
-	while(n-->0)*p++=vl;
-	return s;
-}
+
+
 
 uch lstrcmp(uch * a, uch * b)
 {
@@ -44,4 +39,10 @@ uch lstrcmp(uch * a, uch * b)
         if(*a++ != *b++)return 1;
     }
     return (*a == *b)?0:1;
+}*/
+uch* lmemset(uch *s,uch vl,uch n)
+{
+	uch *p=s;
+	while(n-->0)*p++=vl;
+	return s;
 }

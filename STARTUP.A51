@@ -24,11 +24,11 @@ $NOMOD51
 ;               ; the absolute start-address of IDATA memory is always 0
 IDATALEN        EQU     80H     ; the length of IDATA memory in bytes.
 ;
-XDATASTART      EQU     8000H      ; the absolute start-address of XDATA memory
+XDATASTART      EQU     9000H      ; the absolute start-address of XDATA memory
 XDATALEN        EQU     8000H      ; the length of XDATA memory in bytes.
 ;
-PDATASTART      EQU     0H      ; the absolute start-address of PDATA memory
-PDATALEN        EQU     0H      ; the length of PDATA memory in bytes.
+PDATASTART      EQU     8000H      ; the absolute start-address of PDATA memory
+PDATALEN        EQU     100H      ; the length of PDATA memory in bytes.
 ;
 ;  Notes:  The IDATA space overlaps physically the DATA and BIT areas of the
 ;          8051 CPU. At minimum the memory space occupied from the C51 
@@ -62,7 +62,7 @@ PBPSTACKTOP     EQU     0FFFFH+1; set top of stack to highest location+1.
 ;
 PPAGEENABLE     EQU     1       ; set to 1 if pdata object are used.
 ;
-PPAGE           EQU     90H       ; define PPAGE number.
+PPAGE           EQU     80H       ; define PPAGE number.
 ;
 PPAGE_SFR       DATA    0A0H    ; SFR that supplies uppermost address byte
 ;               (most 8051 variants use P2 as uppermost address byte)

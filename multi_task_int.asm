@@ -6,8 +6,11 @@
 NAME	T
 
 ?PR?Timer0?T         SEGMENT CODE 
-        EXTRN	XDATA (is_timer0_int)
+        EXTRN	XDATA (soft_int)
 	EXTRN	XDATA (intrpt_count)
+	EXTRN	XDATA (task_head)
+	EXTRN	XDATA (cur_task)
+		
 	PUBLIC	Timer0
 
 
@@ -18,249 +21,152 @@ CSEG	AT	0000BH
 ; void Timer0(void) interrupt 1 using 0
 
 	RSEG  ?PR?Timer0?T
-	USING	0
+	USING	1
 Timer0: 
-        MOV     TH0,#TIMER
-	PUSH    ACC
-	MOV     ACC,#1
-        LCALL   SET_TIMER_FLAG
-        LCALL   TIMER_SWITCH_TASK
-
-SET_TIMER_FLAG:
- 	PUSH    DPH
-	PUSH    DPL
-	MOV  	DPTR,#is_timer0_int
-	MOVX    @DPTR,A 
-
-	MOV  	DPTR,#intrpt_count
-	MOVX    A, @DPTR
-        INC     A
-        MOVX    @DPTR,A ;inc intrpt_count
-        POP     DPL
-	POP     DPH
-	RET
-TIMER_SWITCH_TASK:
-        POP     ACC
-	POP     ACC  ;DELETE THE PC VALUE WHERE LCALL THIS FUN
-	POP     ACC  ;RESTORE ACC
-	LJMP    switch_task
-
-
-
-
-?PR?SWITCH_TASK         SEGMENT CODE 
-	EXTRN	XDATA (task_head)
-	EXTRN	XDATA (cur_task)
-	PUBLIC	SWITCH_TASK
-; #include "global.h"
-        TIMER EQU 0xe0
-
-
-	RSEG  ?PR?SWITCH_TASK
-	USING	0
-switch_task: 
-        CLR     EA
 	PUSH 	ACC
-	PUSH 	B
 	PUSH 	DPH
 	PUSH 	DPL
 	PUSH 	PSW
+	USING	1
+	MOV  	PSW,#08H
 			; SOURCE LINE # 3
 ; {
 ; task_list[cur_task_index].task_fun=task1;
 			; SOURCE LINE # 5
 ; task_list[cur_task_index].task_fun=task1;
 			; SOURCE LINE # 5
+	MOV  	R0,#LOW (soft_int)
+	MOVX 	A,@R0
+	JZ   	real_int
+; 	    soft_int=0;
+			; SOURCE LINE # 330
+	CLR  	A
+	MOVX 	@R0,A
+	SJMP 	end_judge1
+real_int:
+			; SOURCE LINE # 331
+; 	    intrpt_count++;
+			; SOURCE LINE # 332
+	MOV  	R0,#LOW (intrpt_count)
+	MOVX 	A,@R0
+	INC  	A
+	MOVX 	@R0,A
+; 		TH0=TIMER;
+			; SOURCE LINE # 333
+	MOV  	TH0,#0E0H
+; 		TL0=0;
+			; SOURCE LINE # 334
+	;MOV  	TL0,#00H
+; 	}
+end_judge1:
         LCALL   new_get_addr
-	MOV     B,AR0     ;bak r0
-	MOV     R0,#7FH
+        MOV     R6,DPL
+        MOV     R7,DPH
+        MOV     R1,#0x0
+	MOV     R2,#0x80
 loop1:
-	MOV  	A,@R0
+	MOV  	A,@R1
 	MOVX 	@DPTR,A
 	INC  	DPTR
-	DJNZ    R0,loop1   ;7f-01 stored
-	MOV     A,B
-        MOVX 	@DPTR,A    ;r0 stored
+	INC     R1
+	DJNZ    R2,loop1   ;7f-01 stored
 
-	MOV     R0,#5
-loop2:
+        MOV     DPL,R6
+        MOV     DPH,R7
+        MOV     A,#0x85    ;->reg_bak.sp
+        LCALL   add_dptr   
+        MOV     A,SP
+        MOVX    @DPTR,A    ;SP stored
+
+next_task:
+        LCALL   new_get_addr
+        MOV     A,#0x8C ;->next_task
+        LCALL   add_dptr  
+	MOV  	R0,#LOW (cur_task)
+	MOVX 	A,@DPTR
+	MOV  	R5,A
+	MOVX     @R0,A
 	INC  	DPTR
-	POP     ACC
-	MOVX    @DPTR,A
-	DJNZ    R0,loop2   ;psw dpl dph b acc stored
-
-	POP     AR0    ;current PC high
-	POP     AR1    ;PC low baked
-
-	INC     DPTR
-	MOV     A,SP
-	MOVX    @DPTR,A ;sp stored
-
-	INC     DPTR
-        mov     a,#0xff
-        movx    @dptr,a
-	INC     DPTR    ;skip the first byte
-	MOV     A,R0
-	MOVX    @DPTR,A
-	INC     DPTR
-	MOV     A,R1
-	MOVX    @DPTR,A ;current PC stored
-
-nexttask:
-; 	cur_task=cur_task->next_task;
-			; SOURCE LINE # 186
-	MOV  	DPTR,#cur_task
+	INC     R0
 	MOVX 	A,@DPTR
-	MOV  	R6,A
-	INC  	DPTR
-	MOVX 	A,@DPTR
-	ADD  	A,#08DH
-	MOV  	DPL,A
-	CLR  	A
-	ADDC 	A,R6
-	MOV  	DPH,A
-	MOVX 	A,@DPTR
-	MOV  	R6,A
-	INC  	DPTR
-	MOVX 	A,@DPTR
+	MOVX     @R0,A
+	ORL  	A,R5
+	JNZ  	not_end_task
+	MOV  	R0,#LOW (task_head)
+	MOVX 	A,@R0
 	MOV  	R7,A
-	MOV  	DPTR,#cur_task
-	MOV  	A,R6
-	MOVX 	@DPTR,A
-	INC  	DPTR
-	MOV  	A,R7
-	MOVX 	@DPTR,A
-; 	if(cur_task == NULL)cur_task=task_head;
-			; SOURCE LINE # 187
-	ORL  	A,R6
-	JNZ  	L36
-	MOV  	DPTR,#task_head
-	MOVX 	A,@DPTR
-	MOV  	R7,A
-	INC  	DPTR
-	MOVX 	A,@DPTR
-	MOV  	DPTR,#cur_task
+	INC  	R0
+	MOVX 	A,@R0
+	MOV  	R0,#LOW (cur_task)
 	XCH  	A,R7
-	MOVX 	@DPTR,A
-	INC  	DPTR
+	MOVX 	@R0,A
+	INC  	R0
 	MOV  	A,R7
-	MOVX 	@DPTR,A
-L36:
-; 	if(cur_task -> status)goto nexttask;
-			; SOURCE LINE # 188
-	MOV  	DPTR,#cur_task
+	MOVX 	@R0,A
+not_end_task:
+
+	LCALL   new_get_addr
+	MOV     R6,DPL
+        MOV     R7,DPH
+	MOV     A,#0x88    ;->.status
+	LCALL   add_dptr
+	MOVX     A,@DPTR
+	JNZ     next_task
+
+        MOV     DPL,R6
+        MOV     DPH,R7
+        MOV     A,#0x85
+        LCALL   add_dptr   
+        MOVX    A,@DPTR   ;SP restored
+	MOV     SP,A
+
+	MOV     DPL,R6
+        MOV     DPH,R7
+        MOV     R1,#0x0
+	MOV     R2,#0x08
+loop2:
 	MOVX 	A,@DPTR
-	MOV  	R7,A
-	MOV     B,A
+	MOV  	@R1,A
 	INC  	DPTR
-	MOVX 	A,@DPTR
-	MOV     R6,A
-	ADD  	A,#089H
-	MOV  	DPL,A
-	CLR  	A
-	ADDC 	A,B
-	MOV  	DPH,A
-	MOVX 	A,@DPTR
-	JNZ   	nexttask
+	INC     R1
+	DJNZ    R2,loop2   ;01-08 stored
 
-	LCALL   dec_dptr
-
-	MOVX    A,@DPTR   ;;last byte of task_fun
-	MOV     R0,A
-	LCALL   dec_dptr
-	MOVX    A,@DPTR
-	MOV     R1,A
-
-	LCALL   dec_dptr
-	LCALL   dec_dptr
-	MOVX    A,@DPTR
-	MOV     SP,A        ;sp restored
-
-	PUSH    AR0
-	PUSH    AR1          ;PC in stack
- 
-	MOV     R0,#5
+	MOV     A,#08
+	LCALL   add_dptr
+        MOV     R1,#0x10
+	MOV     R2,#0x70
 loop3:
-	LCALL   dec_dptr
-	MOVX    A,@DPTR
-	PUSH    ACC
-	DJNZ    R0,loop3      ;psw dpl dph b acc restored
-
-	LCALL   dec_dptr
-	MOVX    A,@DPTR
-	MOV     B,A     ;AR0 baked
-	MOV     DPH,R7
-	MOV     DPL,R6  ;first byte of struct
-	MOV     R0,#0x7F
-loop4:
-
 	MOVX 	A,@DPTR
-	MOV  	@R0,A
+	MOV  	@R1,A
 	INC  	DPTR
-	DJNZ    R0,loop4
-	MOV     AR0,B   ;00h restored
+	INC     R1
+	DJNZ    R2,loop3   ;10-7f restored
+
+
+
 
 	POP  	PSW
 	POP  	DPL
 	POP  	DPH
-	POP  	B
 	POP  	ACC
-
-        PUSH    ACC
-	PUSH    DPL
-	PUSH    DPH
-	MOV     DPTR,#is_timer0_int
-	MOVX    A,@DPTR
-	POP     DPH
-	POP     DPL
-	JNZ     FROM_TIMER0
-	POP     ACC
-	SETB     EA
-	RET
-FROM_TIMER0:
-        MOV     ACC,#0
-	LCALL   SET_TIMER_FLAG
-	POP     ACC
-	SETB    EA
 	RETI 
 
 new_get_addr:
-	MOV  	DPTR,#cur_task
-	MOVX 	A,@DPTR
-	MOV  	B,A
-	INC     DPTR
-	MOVX  	A,@DPTR
-	MOV  	DPL,A
-	MOV     A,B
+	MOV  	R0,#LOW (cur_task)
+	MOVX  	A,@R0
 	MOV     DPH,A
-	RET
-
-dec_dptr:
-        MOV     A,DPL
-	JZ      F1
-	DEC     DPL
-	RET
-F1:     DEC     DPH
-        MOV     DPL,0xff
+	INC  	R0
+	MOVX 	A,@R0
+	MOV     DPL,A
 	RET
 
 add_dptr:
-        MOV     B,DPL
-	ADD     A,B    ;last byte of task_fun
+        MOV     R2,DPL
+	ADD     A,R2    ;last byte of task_fun
 	MOV     DPL,A
 	MOV     A,DPH
 	ADDC    A,#0
 	MOV     DPH,A 
         RET
         
-dec_dptr_old:
-        MOV     A,DPL
-	CLR     C
-	SUBB     A,#1
-	MOV     DPL,A
-	MOV     A,DPH
-	SUBB    A,#0
-	MOV     DPH,A
-	RET
-
 	END

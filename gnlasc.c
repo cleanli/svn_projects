@@ -19,8 +19,8 @@ uch* dByte2Str(uch b,uch*s)
 	*s=sByte2Asc(b);
 	return s;
 }
-/*
-uch sASC2Byte(uch*s)
+
+uch sASC2Byte(uch xdata*s)
 {
 	uch tmp;
 	tmp=*s;
@@ -37,7 +37,7 @@ uch sASC2Byte(uch*s)
 		return 0;
 	}
 }
- 
+/* 
 uch dASC2Byte(uch*s)
 {
 	uch a=0;
@@ -113,3 +113,22 @@ void int2Str(uch* acTmp,uint iValue, struct tpIDS *sttIntDispSet)
 	*p=0;
 	if(bF)*(p-1)=0x30;
 }
+
+uch str_to_byte(uch xdata*s)
+{
+    uch buf[3],data* p,i,ret=0;
+    
+    p=buf;
+    while(*s == ' ')s++;
+    if(*s == 0)return ret;
+    for(i=0;i<3;i++){
+        if(!(*s))break;
+        *(p++)=sASC2Byte(s++);        
+    }
+    for(;i>0;i--){
+        ret *=10;
+        ret += *--p;
+    }
+    return ret;
+}
+
