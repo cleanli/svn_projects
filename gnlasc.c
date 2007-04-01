@@ -123,11 +123,7 @@ uch str_to_byte(uch xdata*s)
     if(*s == 0)return ret;
     for(i=0;i<3;i++){
         if(!(*s))break;
-        *(p++)=sASC2Byte(s++);        
-    }
-    for(;i>0;i--){
-        ret *=10;
-        ret += *--p;
+        ret = ret*10+sASC2Byte(s++);        
     }
     return ret;
 }
