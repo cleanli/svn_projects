@@ -27,17 +27,15 @@ OUTPUT_ARCH(arm)
 ENTRY(_start)
 SECTIONS
 {
-	. = 0x30000000;
+	. = 0x00000000;
 
 	. = ALIGN(4);
 	.text      :
 	{
-	  asm2440.o	(*.text)
-	  s3c2440.o	(*.text)	
+	  asm2440.o	(.text)	
 	  cmd.o	(.text)
 	  m.o	(.text)
 	  print.o	(.text)
-	  xmodem.o	(.text)
 	}
 
 	. = ALIGN(4);
@@ -49,6 +47,14 @@ SECTIONS
         . = ALIGN(4);
         __bss_start = .;
         .bss (NOLOAD) : { *(.bss) . = ALIGN(4); }
+        _end = .;
 
+	. = ALIGN(4);
+	._text	:
+	{
+	  s3c2440.o	(.text)
+	  xmodem.o	(.text)
+	}
+	. = ALIGN(4);
 	_end = .;
 }

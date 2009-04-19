@@ -5,7 +5,8 @@
  * By Clean Li 2009.4 China
  */
 
-.globl nand_read_ll
+.globl send_string
+.globl serial_send_byte
 .globl main
 .globl _start
 _start:	b       start_code
@@ -34,6 +35,71 @@ mem_reg_value:
         .long   0x000000b2
         .long   0x00000030
         .long   0x00000030
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
 /*
  * the actual start code
  */
@@ -58,8 +124,7 @@ start_code:
 	str     r1, [r0]
 
 /*init sp*/
-	@ldr	sp, =0x00000ff8
-	ldr	sp, =0x30101000
+	ldr	sp, =0x00000ff8
 
 	/*
 	 * mask all IRQs by setting all bits in the INTMR - default
@@ -68,7 +133,7 @@ start_code:
 	ldr	r0, =INTMSK
 	str	r1, [r0]
 
-	ldr	r1, =0x7ff
+	ldr	r1, =0x3ff
 	ldr	r0, =INTSUBMSK
 	str	r1, [r0]
 
@@ -105,13 +170,11 @@ start_code:
         nop
         nop
         nop
-        nop
 
         @MPLL setup
         ldr     r0, =MPLLCON
         ldr     r1, =0x7f021
         str     r1, [r0]
-        nop
         nop
         nop
         nop
@@ -159,95 +222,7 @@ loop10:
         ldr     r0, =UBRDIV0
         mov     r1, #0x1b
         str     r1, [r0]        /*set baudrate 115200bps*/
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-@
-@ copy code to ram from nand
-@
-#define NAND_CTL_BASE   0x4e000000
-#define oNFCONF         0x0
-#define oNFCONT         0x4
-#define oNFCMD          0x8
-#define oNFSTAT         0x20
 
-        @ reset NAND
-        mov     r1, #NAND_CTL_BASE
-        ldr     r2, =( (7<<12)|(7<<8)|(7<<4)|(0<<0) )
-        str     r2, [r1, #oNFCONF]
-        ldr     r2, [r1, #oNFCONF]
-
-        ldr     r2, =( (1<<4)|(0<<1)|(1<<0) ) @ Active low CE Control
-        str     r2, [r1, #oNFCONT]
-        ldr     r2, [r1, #oNFCONT]
-
-        ldr     r2, =(0x6)              @ RnB Clear
-        str     r2, [r1, #oNFSTAT]
-        ldr     r2, [r1, #oNFSTAT]
-
-        mov     r2, #0xff               @ RESET command
-        strb    r2, [r1, #oNFCMD]
-        mov     r3, #0                  @ wait
-1:      add     r3, r3, #0x1
-        cmp     r3, #0xa
-        blt     1b
-2:      ldr     r2, [r1, #oNFSTAT]      @ wait ready
-        tst     r2, #0x4
-        beq     2b
-
-        ldr     r2, [r1, #oNFCONT]
-        orr     r2, r2, #0x2            @ Flash Memory Chip Disable
-        str     r2, [r1, #oNFCONT]
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-	@judge if in steppingstone
-	mov	r0, pc
-	cmp	r0, #0x30000000
-	bgt	jump_to_ram	@not in steppingstone, already in dram, go without copying nand code
-
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-        @ get ready to call C functions (for nand_read())
-        @ldr     sp, DW_STACK_START      @ has been setuped at start
-        mov     fp, #0                  @ no previous frame, so fp=0
-
-#define TEXT_RAM_BASE   0x30000000
-#define TEXT_NAND_BASE  0x0
-#define TEXT_SIZE       0x100000
-
-        @ copy
-        ldr     r0, =TEXT_RAM_BASE
-        ldr     r1, =TEXT_NAND_BASE
-        ldr     r2, =TEXT_SIZE
-        bl      nand_read_ll
-
-        tst     r0, #0x0
-        bne     bad_nand_read
-
-        @ verify
-        mov     r0, #0
-        ldr     r1, =TEXT_NAND_BASE
-        mov     r2, #0x400      @ 4 bytes * 1024 = 4K-bytes
-go_next:
-        ldr     r3, [r0], #4
-        ldr     r4, [r1], #4
-        teq     r3, r4
-        bne     bad_nand_read
-        subs    r2, r2, #4
-        bne     go_next
-	
-	@jump to ram to run
-jump_to_ram:
-	ldr     r1, =here_is_ram
-        add     pc, r1, #0
-        nop
-        nop
-        b       .              @ infinite loop
-bad_nand_read:
-        mov    	r0, #'E'
-	bl	s3c2440_serial_send_byte
-	b	.
-
-here_is_ram:
         b       main
-                                                    
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
                                            
 /*****************************************************************************/
