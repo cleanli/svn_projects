@@ -222,20 +222,18 @@ uint time_limit_recv_byte(uint limit, unsigned char * c);
 void run_clean_boot()
 {
 	unsigned char c;
- 	uint timeout = 0;
 	
 	mrw_addr = 0x30000000;
 	lprint("\r\n\r\nMini_clean_boot v%s,%s %s.\r\nAnykey stop auto load file\r\n", CLEAN_BOOT_VERSION,__DATE__,__TIME__);
-	if(time_limit_recv_byte(0xf0000, c) == 0){
-		lmemset(cmd_buf, 0, COM_MAX_LEN);
-		lprint("\r\nCleanBoot@%s>", PLATFORM);
-		timeout = 1;
-	}
+	xmodem_1k_recv((unsigned char*)mrw_addr);
+	lmemset(cmd_buf, 0, COM_MAX_LEN);
+	lprint("\r\nCleanBoot@%s>", PLATFORM);
+	
 	while(1){
-		if(timeout)c = con_recv();
-		if(c == ENTER_CHAR || !timeout){
-			timeout = 1;
-			handle_cmd();
+		c = con_recv();
+		if(c == ENTER_CHAR || c == 0x1b){
+			if(c == ENTER_CHAR)
+				handle_cmd();
 			lmemset(cmd_buf, 0, COM_MAX_LEN);
 			cmd_buf_p = 0;
 			lprint("\r\nCleanBoot@%s>", PLATFORM);
