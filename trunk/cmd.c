@@ -16,8 +16,10 @@ static const struct command cmd_list[]=
     {"help",print_help,"help message"},
     {"nandcp",nandcp, "copy nand data to ram specified addr"},
     {"nander",nander, "erase nand"},
+    {"nandpp",nandpp, "nand program page from memory"},
     {"nandr",nandr,"random read nand data"},
     {"nandspr",nandspr,"random read nand spare data"},
+    {"nandwb",nandwb,"random write nand byte"},
     {"ndbb",ndbb,"check if one nand block is marked bad"},
     {"ndchkbb",ndchkbb,"scan all flash marked bad block"},
     {"pfbs",put_file_by_serial,"put file by serial"},
@@ -77,7 +79,15 @@ error:
 
 void get_file_by_serial(unsigned char *para)
 {
+	uint tmp;
+	lprint("if any other para after 'go', the file will auto go 15s later or any key!\r\n");
+    	tmp = get_howmany_para(para);
 	xmodem_1k_recv((unsigned char*)mrw_addr);
+	if(tmp != 0){
+                time_limit_recv_byte(0xc00000, para);
+		(*((void (*)())mrw_addr))();
+	}
+		
 
 /*
 	uint i = 1028, tmp = 0x20000, repeat = 36;
@@ -102,14 +112,15 @@ void get_file_by_serial(unsigned char *para)
 void print_help(unsigned char *para)
 {
     uint i = 0;
-    lprint("Clean Boot V%s\r\nAvailable cmd is:\r\n", CLEAN_BOOT_VERSION);
+    lprint("Clean Boot V%s\r\nAvailable cmd is:\r\n\r\n", CLEAN_BOOT_VERSION);
     while(1){
             if(cmd_list[i].cmd_name == NULL)
                     break;
-	    lprint("--%s\r\n\t%s\r\n", cmd_list[i].cmd_name, cmd_list[i].cmd_des);
+	    lprint("--%s: %s\r\n", cmd_list[i].cmd_name, cmd_list[i].cmd_des);
+	    //lprint("--%s\r\n\t%s\r\n", cmd_list[i].cmd_name, cmd_list[i].cmd_des);
             i++;
     }
-    lprint("'r' is a special command, if a address followed, it will be set as a memory base for many other command, such as 'pm', and so on\r\nESC will cancel current command\r\n");
+    lprint("\r\n'r' is a special command, if a address followed, it will be set as a memory base for many other command, such as 'pm', and so on\r\nESC will cancel current command\r\n");
 }
 
 uint asc_to_hex(unsigned char c)
@@ -249,6 +260,26 @@ error:
 
 }
 
+void nandwb(unsigned char *p)
+{
+    uint addr, tmp, c;
+
+    tmp = get_howmany_para(p);
+    if(tmp != 2)
+        goto error;
+    p = str_to_hex(p, &c);
+    p = str_to_hex(p, &addr);
+
+    c &= 0xff;
+    if(random_write_nand((unsigned char)c, addr) == 0)
+    	lprint("successfully\r\n");
+    return;
+
+error:
+    lprint("Error para!\r\nnandwb (hex char)(hex addr) random write nand\r\n");
+
+}
+
 void nander(unsigned char *p)
 {
     uint addr, tmp;
@@ -267,6 +298,30 @@ cp:
 
 error:
     lprint("Error para!\r\nnander (hex block addr)\r\n");
+
+}
+
+void nandpp(unsigned char *p)
+{
+    uint addr, pages, tmp;
+
+    tmp = get_howmany_para(p);
+    if(tmp != 2)
+        goto error;
+    p = str_to_hex(p, &addr);
+    str_to_hex(p, &pages);
+    addr = addr & 0xfffffe00;
+
+    nand_reset();
+    if(nand_write_ll(mrw_addr, addr, 512 * pages)){
+	lprint("failed\r\n");
+	return;
+    }
+    lprint("program 0x%x pages from memory 0x%x to nand addr %x done!\r\n",pages,mrw_addr,addr);
+    return;
+
+error:
+    lprint("Error para!\r\nnandcp (hex addr) (hex pages)\r\n");
 
 }
 

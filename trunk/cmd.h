@@ -18,6 +18,8 @@ void nandr(unsigned char *p);
 void nandspr(unsigned char *p);
 void ndchkbb(unsigned char *p);
 void nander(unsigned char *p);
+void nandwb(unsigned char *p);
+void nandpp(unsigned char *p);
 void nandcp(unsigned char *p);
 void go(unsigned char *p);
 void pm(unsigned char *p);

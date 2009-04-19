@@ -58,6 +58,28 @@ int nand_read_ll(unsigned char *buf, unsigned long start_addr, int size)
 }
 
 #define ERASE_BLOCK_ADDR_MASK (512 * 32 -1)
+uint random_write_nand(unsigned char c, uint addr)
+{
+        NAND_CHIP_ENABLE;
+        NAND_CLEAR_RB;
+	NFCMD = 0x80;
+        NFADDR = (addr) & 0xff;
+        NFADDR = (addr >> 9) & 0xff;
+        NFADDR = (addr >> 17) & 0xff;
+        NFADDR = (addr >> 25) & 0xff;
+	NFDATA = c;
+	NFCMD = 0x10;
+        NAND_DETECT_RB;
+	while(!(NFSTAT & 0x1));
+	NFCMD = 0x70;
+	if(NFDATA & 0x1){
+		lprint("program failed! may get bad.\r\n");
+        	NAND_CHIP_DISABLE;
+		return -1;
+	}
+        NAND_CHIP_DISABLE;
+	return 0;
+}
 uint random_read_nand(uint spare, uint addr)
 {
 	uint tmd;
@@ -197,6 +219,7 @@ int nand_erase_ll(uint addr)
 	NFCMD = 0x70;
 	if(NFDATA & 0x1){
 		lprint("erase failed! may get bad.\r\n");
+        	NAND_CHIP_DISABLE;
 		return -1;
 	}
 	lprint("erase successfully! \r\n");
@@ -206,7 +229,7 @@ int nand_erase_ll(uint addr)
 
 int nand_write_ll(unsigned char *buf, unsigned long start_addr, int size)
 {
-        int i, j;
+        uint i, j;
 
         lprint("Write Command:membuf=%x, nandaddr=%x, size=%x\r\n", buf, start_addr, size);
         if ((start_addr & NAND_BLOCK_MASK) || (size & NAND_BLOCK_MASK)) {
@@ -222,7 +245,7 @@ int nand_write_ll(unsigned char *buf, unsigned long start_addr, int size)
         for(i=start_addr; i < (start_addr + size);) {
                 /* READ0 */
                 NAND_CLEAR_RB;
-                NFCMD = 0;
+                NFCMD = 0x80;
 
                 /* Write Address */
                 NFADDR = i & 0xff;
@@ -230,14 +253,23 @@ int nand_write_ll(unsigned char *buf, unsigned long start_addr, int size)
                 NFADDR = (i >> 17) & 0xff;
                 NFADDR = (i >> 25) & 0xff;
 
-                NAND_DETECT_RB;
 
                 for(j=0; j < NAND_SECTOR_SIZE; j++, i++) {
-                        *buf = (NFDATA & 0xff);
-                        buf++;
+                        NFDATA = *buf++;
                 }
+		NFCMD = 0x10;
+        	NAND_DETECT_RB;
+		
+		while(!NFSTAT&0x1);
+		NFCMD = 0x70;
+		if(NFDATA & 0x1){
+			lprint("current block(%x)program failed! may get bad.\r\n", (i-512)&~ERASE_BLOCK_ADDR_MASK);
+        		NAND_CHIP_DISABLE;
+			return -1;
+		}	
+		
                 if(!((i>>9) & 0x3f))
-                        s3c2440_serial_send_byte('>');
+                        s3c2440_serial_send_byte('<');
         }
         NAND_CHIP_DISABLE;
         return 0;

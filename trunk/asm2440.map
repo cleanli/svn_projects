@@ -9,92 +9,95 @@ Linker script and memory map
                 0x30000000                . = 0x30000000
                 0x30000000                . = ALIGN (0x4)
 
-.text           0x30000000     0x169c
+.text           0x30000000     0x192c
  asm2440.o(*.text)
  .text          0x30000000      0x2a0 asm2440.o
                 0x30000000                _start
  s3c2440.o(*.text)
- .text          0x300002a0      0x55c s3c2440.o
-                0x30000798                s3c2440_serial_send_byte
+ .text          0x300002a0      0x6d8 s3c2440.o
+                0x30000434                random_write_nand
+                0x30000914                s3c2440_serial_send_byte
                 0x30000304                nand_read_ll
-                0x300004e4                is_marked_bad_block
-                0x3000055c                nand_erase_ll
+                0x300005d0                is_marked_bad_block
+                0x30000648                nand_erase_ll
                 0x300002a0                nand_reset
-                0x30000668                nand_write_ll
-                0x30000434                random_read_nand
-                0x300007c0                s3c2440_serial_recv_byte
-                0x300007e8                s3c2440_is_serial_recv
+                0x30000770                nand_write_ll
+                0x30000520                random_read_nand
+                0x3000093c                s3c2440_serial_recv_byte
+                0x30000964                s3c2440_is_serial_recv
  cmd.o(.text)
- .text          0x300007fc      0x8e8 cmd.o
-                0x30000fe4                run_clean_boot
-                0x30000ed0                lmemcpy
-                0x300007fc                ndchkbb
-                0x30000954                print_help
-                0x30000e64                read_mem
-                0x30000d4c                nandcp
-                0x300008a8                go
-                0x30000c14                nandspr
-                0x30000ad4                print_mem
-                0x30000dd8                write_mem
-                0x300008cc                put_file_by_serial
-                0x300009b8                asc_to_hex
-                0x30000efc                lmemset
-                0x30000cdc                nander
-                0x30000f20                handle_cmd
-                0x30000ba4                ndbb
-                0x30000944                get_file_by_serial
-                0x30000c78                nandr
-                0x30000b44                pm
+ .text          0x30000978      0xa34 cmd.o
+                0x300012ac                run_clean_boot
+                0x30001198                lmemcpy
+                0x30000978                ndchkbb
+                0x30000b10                print_help
+                0x3000112c                read_mem
+                0x30001014                nandcp
+                0x30000a24                go
+                0x30000dd0                nandspr
+                0x30000c90                print_mem
+                0x300010a0                write_mem
+                0x30000a48                put_file_by_serial
+                0x30000b74                asc_to_hex
+                0x300011c4                lmemset
+                0x30000f04                nander
+                0x30000e98                nandwb
+                0x300011e8                handle_cmd
+                0x30000d60                ndbb
+                0x30000ac0                get_file_by_serial
+                0x30000f74                nandpp
+                0x30000e34                nandr
+                0x30000d00                pm
  m.o(.text)
- .text          0x300010e4        0x4 m.o
-                0x300010e4                main
+ .text          0x300013ac        0x4 m.o
+                0x300013ac                main
  print.o(.text)
- .text          0x300010e8      0x244 print.o
-                0x30001104                halfbyte2char
-                0x30001278                lprint
-                0x3000116c                num2str
-                0x30001228                print_uint
-                0x30001250                print_hex
-                0x300010e8                print_string
-                0x30001128                div
+ .text          0x300013b0      0x244 print.o
+                0x300013cc                halfbyte2char
+                0x30001540                lprint
+                0x30001434                num2str
+                0x300014f0                print_uint
+                0x30001518                print_hex
+                0x300013b0                print_string
+                0x300013f0                div
  xmodem.o(.text)
- .text          0x3000132c      0x370 xmodem.o
-                0x300013d8                xmodem_1k_recv
-                0x3000156c                xmodem_1k_send
-                0x30001390                time_limit_recv_byte
-                0x3000132c                crc16
+ .text          0x300015f4      0x338 xmodem.o
+                0x300016a0                xmodem_1k_recv
+                0x300017fc                xmodem_1k_send
+                0x30001658                time_limit_recv_byte
+                0x300015f4                crc16
 
-.glue_7         0x3000169c        0x0
+.glue_7         0x3000192c        0x0
 
-.glue_7t        0x3000169c        0x0
-                0x3000169c                . = ALIGN (0x4)
+.glue_7t        0x3000192c        0x0
+                0x3000192c                . = ALIGN (0x4)
 
-.rodata         0x3000169c       0xa8
+.rodata         0x3000192c       0xc0
  *(.rodata)
- .rodata        0x3000169c       0xa8 cmd.o
+ .rodata        0x3000192c       0xc0 cmd.o
 
-.rodata.str1.4  0x30001744      0x905
+.rodata.str1.4  0x300019ec      0xa5d
  .rodata.str1.4
-                0x30001744       0xf8 s3c2440.o
+                0x300019ec      0x148 s3c2440.o
  .rodata.str1.4
-                0x3000183c      0x7c0 cmd.o
-                                0x7d0 (size before relaxing)
+                0x30001b34      0x8f4 cmd.o
+                                0x904 (size before relaxing)
  .rodata.str1.4
-                0x30001ffc       0x4d xmodem.o
-                                 0x50 (size before relaxing)
-                0x3000204c                . = ALIGN (0x4)
+                0x30002428       0x21 xmodem.o
+                                 0x24 (size before relaxing)
+                0x3000244c                . = ALIGN (0x4)
 
-.data           0x3000204c        0x0
+.data           0x3000244c        0x0
  *(.data)
-                0x3000204c                . = ALIGN (0x4)
-                0x3000204c                __bss_start = .
+                0x3000244c                . = ALIGN (0x4)
+                0x3000244c                __bss_start = .
 
-.bss            0x3000204c       0x28
+.bss            0x3000244c       0x28
  *(.bss)
- .bss           0x3000204c       0x28 cmd.o
-                0x3000204c                cmd_buf_p
-                0x30002074                . = ALIGN (0x4)
-                0x30002074                _end = .
+ .bss           0x3000244c       0x28 cmd.o
+                0x3000244c                cmd_buf_p
+                0x30002474                . = ALIGN (0x4)
+                0x30002474                _end = .
 LOAD asm2440.o
 LOAD m.o
 LOAD cmd.o
@@ -106,29 +109,29 @@ LOAD /home/clean/arm-linux/arm-tools/bin/../arm-linux/lib/libm.a
 LOAD /home/clean/arm-linux/arm-tools/lib/gcc-lib/arm-linux/3.3.6/libgcc.a
 OUTPUT(asm2440.elf elf32-littlearm)
 
-.debug_line     0x00000000      0x4c4
+.debug_line     0x00000000      0x515
  .debug_line    0x00000000       0xc0 asm2440.o
- .debug_line    0x000000c0       0xfd s3c2440.o
- .debug_line    0x000001bd      0x145 cmd.o
- .debug_line    0x00000302       0x41 m.o
- .debug_line    0x00000343       0xd9 print.o
- .debug_line    0x0000041c       0xa8 xmodem.o
+ .debug_line    0x000000c0      0x130 s3c2440.o
+ .debug_line    0x000001f0      0x16a cmd.o
+ .debug_line    0x0000035a       0x41 m.o
+ .debug_line    0x0000039b       0xd9 print.o
+ .debug_line    0x00000474       0xa1 xmodem.o
 
-.debug_info     0x00000000      0xf68
+.debug_info     0x00000000     0x10a8
  .debug_info    0x00000000       0x5d asm2440.o
- .debug_info    0x0000005d      0x265 s3c2440.o
- .debug_info    0x000002c2      0x79b cmd.o
- .debug_info    0x00000a5d       0xa0 m.o
- .debug_info    0x00000afd      0x263 print.o
- .debug_info    0x00000d60      0x208 xmodem.o
+ .debug_info    0x0000005d      0x2b2 s3c2440.o
+ .debug_info    0x0000030f      0x899 cmd.o
+ .debug_info    0x00000ba8       0xa0 m.o
+ .debug_info    0x00000c48      0x263 print.o
+ .debug_info    0x00000eab      0x1fd xmodem.o
 
-.debug_abbrev   0x00000000      0x58b
+.debug_abbrev   0x00000000      0x57d
  .debug_abbrev  0x00000000       0x14 asm2440.o
- .debug_abbrev  0x00000014      0x100 s3c2440.o
- .debug_abbrev  0x00000114      0x239 cmd.o
- .debug_abbrev  0x0000034d       0x76 m.o
- .debug_abbrev  0x000003c3       0xec print.o
- .debug_abbrev  0x000004af       0xdc xmodem.o
+ .debug_abbrev  0x00000014      0x109 s3c2440.o
+ .debug_abbrev  0x0000011d      0x239 cmd.o
+ .debug_abbrev  0x00000356       0x76 m.o
+ .debug_abbrev  0x000003cc       0xec print.o
+ .debug_abbrev  0x000004b8       0xc5 xmodem.o
 
 .debug_aranges  0x00000000       0xc0
  .debug_aranges
@@ -144,40 +147,40 @@ OUTPUT(asm2440.elf elf32-littlearm)
  .debug_aranges
                 0x000000a0       0x20 xmodem.o
 
-.debug_frame    0x00000000      0x52c
- .debug_frame   0x00000000       0xec s3c2440.o
- .debug_frame   0x000000ec      0x284 cmd.o
- .debug_frame   0x00000370       0x20 m.o
- .debug_frame   0x00000390       0xf4 print.o
- .debug_frame   0x00000484       0xa8 xmodem.o
+.debug_frame    0x00000000      0x5a4
+ .debug_frame   0x00000000      0x10c s3c2440.o
+ .debug_frame   0x0000010c      0x2dc cmd.o
+ .debug_frame   0x000003e8       0x20 m.o
+ .debug_frame   0x00000408       0xf4 print.o
+ .debug_frame   0x000004fc       0xa8 xmodem.o
 
 .debug_pubnames
-                0x00000000      0x2dd
+                0x00000000      0x309
  .debug_pubnames
-                0x00000000       0xd8 s3c2440.o
+                0x00000000       0xee s3c2440.o
  .debug_pubnames
-                0x000000d8      0x11e cmd.o
+                0x000000ee      0x134 cmd.o
  .debug_pubnames
-                0x000001f6       0x1b m.o
+                0x00000222       0x1b m.o
  .debug_pubnames
-                0x00000211       0x71 print.o
+                0x0000023d       0x71 print.o
  .debug_pubnames
-                0x00000282       0x5b xmodem.o
+                0x000002ae       0x5b xmodem.o
 
 .debug_ranges   0x00000000       0x38
  .debug_ranges  0x00000000       0x18 s3c2440.o
  .debug_ranges  0x00000018       0x20 cmd.o
 
-.debug_str      0x00000000      0x3b1
- .debug_str     0x00000000      0x122 s3c2440.o
-                                0x139 (size before relaxing)
- .debug_str     0x00000122      0x178 cmd.o
-                                0x21f (size before relaxing)
- .debug_str     0x0000029a        0x5 m.o
+.debug_str      0x00000000      0x3d1
+ .debug_str     0x00000000      0x134 s3c2440.o
+                                0x14b (size before relaxing)
+ .debug_str     0x00000134      0x186 cmd.o
+                                0x24d (size before relaxing)
+ .debug_str     0x000002ba        0x5 m.o
                                  0x7f (size before relaxing)
- .debug_str     0x0000029f       0x6b print.o
+ .debug_str     0x000002bf       0x6b print.o
                                  0xda (size before relaxing)
- .debug_str     0x0000030a       0xa7 xmodem.o
+ .debug_str     0x0000032a       0xa7 xmodem.o
                                 0x11c (size before relaxing)
 
 .comment        0x00000000       0x5a
