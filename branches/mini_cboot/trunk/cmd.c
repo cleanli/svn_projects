@@ -4,8 +4,8 @@
 #include "print.h"
 #include "xmodem.h"
 
-static unsigned char cmd_buf[COM_MAX_LEN] = "gfbs";
-uint cmd_buf_p = 0;
+static unsigned char cmd_buf[COM_MAX_LEN] = "";
+static uint cmd_buf_p = COM_MAX_LEN;
 
 static const struct command cmd_list[]=
 {
@@ -17,7 +17,7 @@ static const struct command cmd_list[]=
     {"w",write_mem},
     {NULL, NULL},
 };
-static uint * mrw_addr = 0x0;
+static uint * mrw_addr = 0x30000000;
 
 void go(unsigned char *para)
 {
@@ -227,6 +227,7 @@ void run_clean_boot()
 	lprint("\r\n\r\nMini_clean_boot v%s,%s %s.\r\nAnykey stop auto load file\r\n", CLEAN_BOOT_VERSION,__DATE__,__TIME__);
 	xmodem_1k_recv((unsigned char*)mrw_addr);
 	lmemset(cmd_buf, 0, COM_MAX_LEN);
+	cmd_buf_p = 0;
 	lprint("\r\nCleanBoot@%s>", PLATFORM);
 	
 	while(1){

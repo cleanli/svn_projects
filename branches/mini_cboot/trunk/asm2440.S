@@ -35,71 +35,6 @@ mem_reg_value:
         .long   0x000000b2
         .long   0x00000030
         .long   0x00000030
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
-	.long 0
 /*
  * the actual start code
  */
@@ -124,7 +59,7 @@ start_code:
 	str     r1, [r0]
 
 /*init sp*/
-	ldr	sp, =0x00000ff8
+	ldr	sp, =0x00000ffc
 
 	/*
 	 * mask all IRQs by setting all bits in the INTMR - default
@@ -222,6 +157,55 @@ loop10:
         ldr     r0, =UBRDIV0
         mov     r1, #0x1b
         str     r1, [r0]        /*set baudrate 115200bps*/
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@
+@ copy code to ram from nand
+@
+#define NAND_CTL_BASE   0x4e000000
+#define oNFCONF         0x0
+#define oNFCONT         0x4
+#define oNFCMD          0x8
+#define oNFSTAT         0x20
+
+        @ reset NAND
+        mov     r1, #NAND_CTL_BASE
+        ldr     r2, =( (7<<12)|(7<<8)|(7<<4)|(0<<0) )
+        str     r2, [r1, #oNFCONF]
+
+        ldr     r2, =( (1<<4)|(0<<1)|(1<<0) ) @ Active low CE Control
+        str     r2, [r1, #oNFCONT]
+        ldr     r2, [r1, #oNFCONT]
+
+@        ldr     r2, =(0x6)              @ RnB Clear
+@        str     r2, [r1, #oNFSTAT]
+@        ldr     r2, [r1, #oNFSTAT]
+
+        mov     r2, #0xff               @ RESET command
+        strb    r2, [r1, #oNFCMD]
+        mov     r3, #0                  @ wait
+1:      add     r3, r3, #0x1
+        cmp     r3, #0x2a
+        blt     1b
+
+@        ldr     r2, [r1, #oNFCONT]
+@        orr     r2, r2, #0x2            @ Flash Memory Chip Disable
+@        str     r2, [r1, #oNFCONT]
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+        @ get ready to call C functions (for nand_read())
+        @ldr     sp, DW_STACK_START      @ has been setuped at start
+
+#define TEXT_RAM_BASE   0x30000000
+#define TEXT_NAND_BASE  0x4000
+#define TEXT_SIZE       0x4000
+
+        @ copy
+        ldr     r0, =TEXT_RAM_BASE
+        ldr     r1, =TEXT_NAND_BASE
+        ldr     r2, =TEXT_SIZE
+        bl      nand_read_ll
 
         b       main
                                            
