@@ -2,6 +2,7 @@
 
 #include "s3c2440.h"
 #include "debug.h"
+#include "print.h"
 
 
 //#define NAND_DEBUG
@@ -291,9 +292,14 @@ void s3c2440_serial_send_byte(unsigned char c)
         UTXH0 = c;
 }
 
+static unsigned short random[16];
+static uint newrandom = 0, userandom = 0, runner = 0;
 unsigned char s3c2440_serial_recv_byte()
 {
-        while(!(USCON0 & 0x1));
+        while(!(USCON0 & 0x1))
+		runner++;
+	if(((newrandom - userandom)&0xf) != 15)/*random not full*/
+		random[(newrandom++)&0xf]=runner&0xffff;	
         return URXH0;
 }
 
@@ -301,4 +307,24 @@ uint s3c2440_is_serial_recv()
 {
 	return (USCON0 & 0x1);
 }
-
+void random_init()
+{
+	userandom = 0;
+	newrandom = 0;
+	lmemset(random, 0, 32);
+}
+unsigned short random_u16()
+{
+	if((userandom&0xf) != (newrandom&0xf))/*random not empty*/
+		return random[(userandom++)&0xf];
+	return 0;
+}
+uint random_st()
+{
+	return (newrandom - userandom)&0xf;
+}
+void test_random()
+{
+	lprint("ready pointer is 0x%x, now to use is 0x%x\r\n", newrandom&0xf, userandom&0xf);
+	print_mem(random, 32);
+}

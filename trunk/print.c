@@ -78,6 +78,13 @@ void print_hex(uint num)
         print_string(nc);
 }
 
+void print_binary(uint num)
+{
+        unsigned char nc[33];
+        num2str(num, nc, 2);
+        print_string(nc);
+}
+
 void lprint(const unsigned char * fmt, ...)
 {
     const unsigned char *s;
@@ -111,6 +118,10 @@ void lprint(const unsigned char * fmt, ...)
 	    case 'x':
                 d = va_arg(ap, uint);
                 print_hex(d);
+                break;
+	    case 'b':
+                d = va_arg(ap, uint);
+                print_binary(d);
                 break;
             /* Add other specifiers here... */             
             default: 

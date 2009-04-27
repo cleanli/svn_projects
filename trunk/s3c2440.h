@@ -3,6 +3,7 @@
 #ifndef _S3C2440_H
 #define _S3C2440_H
 #include "type.h"
+#include "debug.h"
 
 /*Serial reg*/
 #define USCON0 *(volatile unsigned long *)0x50000010
@@ -27,11 +28,24 @@
 #define NAND_SECTOR_SIZE        512
 #define NAND_BLOCK_MASK         (NAND_SECTOR_SIZE - 1)
 
+/*cs8900*/
+#define CS8900_IO_BASE 0x19000300
+#define CS8900_MEM_BASE 0x18000000
+#define rio(PORT) *(volatile unsigned short*)(CS8900_IO_BASE + PORT)
+#define wio(PORT, DATA) *(volatile unsigned short*)(CS8900_IO_BASE + PORT) = DATA
+#define mem_r(RADDR) *(volatile unsigned short*)(CS8900_MEM_BASE + RADDR)
+#define mem_w(RADDR, DATA) *(volatile unsigned short*)(CS8900_MEM_BASE + RADDR) = DATA
+#define MEM_ADDR(RADDR) (CS8900_MEM_BASE + RADDR)
+
 /* low level nand read function */
 int nand_read_ll(unsigned char *buf, unsigned long start_addr, int size);
 void s3c2440_serial_init();
 void s3c2440_serial_send_byte(unsigned char c);
 unsigned char s3c2440_serial_recv_byte();
 uint s3c2440_is_serial_recv();
+void random_init();
+void test_random();
+unsigned short random_u16();
+uint random_st();
 
 #endif /*_S3C2440_H*/

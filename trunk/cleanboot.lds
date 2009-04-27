@@ -27,13 +27,13 @@ OUTPUT_ARCH(arm)
 ENTRY(_start)
 SECTIONS
 {
-	. = 0x00000000;
+	. = 0x30000000;
 
 	. = ALIGN(4);
 	.text      :
 	{
-	  asm2440.o	(.text)
-	  *(.text)
+	  ./asm2440.o	(*.text)
+	  *(.text)	
 	}
 
 	. = ALIGN(4);
@@ -42,16 +42,9 @@ SECTIONS
 	. = ALIGN(4);
 	.data : { *(.data) }
 
-	. = ALIGN(4);
-	.got : { *(.got) }
+        . = ALIGN(4);
+        __bss_start = .;
+        .bss (NOLOAD) : { *(.bss) . = ALIGN(4); }
 
-	. = .;
-	__u_boot_cmd_start = .;
-	.u_boot_cmd : { *(.u_boot_cmd) }
-	__u_boot_cmd_end = .;
-
-	. = ALIGN(4);
-	__bss_start = .;
-	.bss (NOLOAD) : { *(.bss) . = ALIGN(4); }
 	_end = .;
 }

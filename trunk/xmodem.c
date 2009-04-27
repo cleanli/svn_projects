@@ -33,7 +33,7 @@ uint time_limit_recv_byte(uint limit, unsigned char * c)
 
 uint xmodem_1k_recv(unsigned char*p)
 {
-        uint i = 128, tmp = 0xa0000, repeat = 66;
+        uint i = 128, tmp = 0xa0000, repeat = 66, packages = 0;
 	unsigned char recved = 0, index = 1, check_sum = 0, *c;
 
 	c = p;
@@ -90,8 +90,10 @@ start_recv_package:
 		con_send(CAN);
 		return 2;
 	}
+	packages++;
 	if(recved == EOT){
 		con_send(ACK);
+		lprint("\r\nreceive 0x%x bytes successfully\r\n", 128*packages);
 		return 0;
 	}
 	index++;

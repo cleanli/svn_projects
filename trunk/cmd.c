@@ -25,10 +25,125 @@ static const struct command cmd_list[]=
     {"pfbs",put_file_by_serial,"put file by serial"},
     {"pm",pm,"print memory content"},
     {"r",read_mem,"read mem, can set specified addr for other cmd"},
+    {"reboot",reboot,"restart run program to zero addr"},
+    {"rww",rw_word,"read/write word"},
+    {"rwb",rw_byte,"read/write byte"},
+    {"setip",setip,"set ip addr of local & server"},
+    {"test",test,"use for debug new command or function"},
+    {"tftpget",tftpget,"get file from tftp server"},
+    {"tftpput",tftpput,"put file to tftp server"},
     {"w",write_mem,"write mem, also can set mem addr"},
     {NULL, NULL, NULL},
 };
 static uint * mrw_addr = 0x0;
+#define IPADDR(A, B, C, D) ((A)|(B)<<8|(C)<<16|(D)<<24)
+uint local_ip = IPADDR(192, 168, 58, 60);
+uint server_ip = IPADDR(192, 168, 58, 43);
+//static uint server_ip = 192<<24|168<<16|58<<8|43;
+
+extern const unsigned char * cs8900_mac[];
+
+void test(unsigned char *p)
+{
+/*
+	uint t = 10;
+	while(t--){
+		delay_us(1000000);
+		lprint("%x\r\n", t);
+	}
+*/
+/*
+	while(1)
+		lprint("%x\r\n", con_recv());
+*/
+/*
+        print_mem(cs8900_mac, 6);
+*/
+	test_random();
+}
+
+void reboot(unsigned char *p)
+{
+	lprint("rebooting...\r\n");
+	delay_us(100000);
+	((void(*const)())0)();
+}
+
+void tftpget(unsigned char *p)
+{
+	if(get_howmany_para(p) != 1)
+		goto error;
+	while(*p == ' ')
+		p++;
+	tftp_get(p, mrw_addr);
+	return;
+error:
+    lprint("Error para!\r\ntftpget (name)\r\n");
+}
+void tftpput(unsigned char *p)
+{
+	if(get_howmany_para(p) != 1)
+		goto error;
+	while(*p == ' ')
+		p++;
+	tftp_put(p, mrw_addr);
+	return;
+error:
+    lprint("Error para!\r\ntftpget (name)\r\n");
+}
+void setip(unsigned char *p)
+{
+}
+void rw_byte(unsigned char *p)
+{
+    uint addr, tmp, c;
+
+    tmp = get_howmany_para(p);
+    if(tmp != 1 && tmp != 2)
+        goto error;
+    p = str_to_hex(p, &addr);
+    if(tmp == 1)
+	goto read;
+    p = str_to_hex(p, &c);
+    c &= 0xff;
+write:
+    *(unsigned char*)addr = c;
+    lprint("write %x to addr %x\r\n", c, addr);
+    return;
+read:
+    lprint("read %x at addr %x\r\n", *(unsigned short*)addr&0xff, addr);
+    return;
+
+error:
+    lprint("Error para!\r\nrww (hex addr) [value], will write if have value para\r\n");
+
+}
+
+void rw_word(unsigned char *p)
+{
+    uint addr, tmp, c;
+
+    tmp = get_howmany_para(p);
+    if(tmp != 1 && tmp != 2)
+        goto error;
+    p = str_to_hex(p, &addr);
+    addr &= ~1;
+    if(tmp == 1)
+	goto read;
+    p = str_to_hex(p, &c);
+    c &= 0xffff;
+write:
+    *(unsigned short*)addr = c;
+    lprint("write %x to addr %x\r\n", c, addr);
+    return;
+read:
+    lprint("read %x at addr %x\r\n", *(unsigned short*)addr&0xffff, addr);
+    return;
+
+error:
+    lprint("Error para!\r\nrww (hex addr) [value], will write if have value para\r\n");
+
+}
 
 void ndchkbb(unsigned char *para)
 {
@@ -170,16 +285,15 @@ void print_mem(unsigned char *cp, uint length)
 {
     uint i;
 
-    cp = (unsigned char *)((uint)cp & (~0x3));
-    lprint("Start print 0x%x mem content @%x:\r\n", length, (uint)cp);
     while(length){
 	lprint("\r\n");
 	for(i=0;i<8;i++){
-		length--;
 		lprint("%x\t", *cp++);
+		length--;
+		if(!length)
+			break;
 	}
     }
-    lprint("\r\nPrint end @%x.\r\n", (uint)cp);
 }
 
 void pm(unsigned char *p)
@@ -193,7 +307,9 @@ void pm(unsigned char *p)
         goto print;
     str_to_hex(p, &length);
 print:
+    lprint("Start print 0x%x mem content @%x:\r\n", length, (uint)mrw_addr);
     print_mem((unsigned char*)mrw_addr, length);
+    lprint("\r\nPrint end @%x.\r\n", (uint)mrw_addr);
     return;
 
 error:

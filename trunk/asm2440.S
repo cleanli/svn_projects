@@ -21,7 +21,7 @@ _start:	b       start_code
 .align 4
 
 mem_reg_value:
-        .long   0x22111110
+        .long   0x2211d110
         .long   0x00000700
         .long   0x00000700
         .long   0x00000700

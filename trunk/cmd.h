@@ -14,6 +14,13 @@ struct command{
 };
 
 void ndbb(unsigned char *p);
+void test(unsigned char *p);
+void reboot(unsigned char *p);
+void setip(unsigned char *p);
+void tftpget(unsigned char *p);
+void tftpput(unsigned char *p);
+void rw_byte(unsigned char *p);
+void rw_word(unsigned char *p);
 void nandr(unsigned char *p);
 void nandspr(unsigned char *p);
 void ndchkbb(unsigned char *p);
