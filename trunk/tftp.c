@@ -326,6 +326,8 @@ uint anlz_tftp()
 
 		send_len = 60;
 		t_s.block_n++;
+		if(!t_s.running)
+        		cs8900_send(s_buf, send_len);
 		return 1;
 	}
 	else{
@@ -336,6 +338,10 @@ uint anlz_tftp()
 			return 0;
 		}
 		t_s.running =1;
+		//setup ack package
+		/*setup tftp req package*/
+		lmemset(s_buf, 0, MAX_PACKAGE);
+		lmemcpy(s_buf, tftp_req, 64);
 		data_len = (t_s.filesize > 512)?512:t_s.filesize;		
 		con_send('`');
 		if(t_s.next_stop){
@@ -346,13 +352,9 @@ uint anlz_tftp()
 		if(data_len != 512){
 			t_s.next_stop = 1;
 		}
-		lmemcpy(riutp->tftp_packet.tftp_data, t_s.membase, data_len);
+		lmemcpy(siutp->tftp_packet.tftp_data, t_s.membase, data_len);
 		t_s.membase += data_len;
 		t_s.filesize -= data_len;
-		//setup ack package
-		/*setup tftp req package*/
-		lmemset(s_buf, 0, MAX_PACKAGE);
-		lmemcpy(s_buf, tftp_req, 64);
 		/*set 802.3 header*/
 		lmemcpy(sep->dest_mac, server_mac, 6);
 		lmemcpy(sep->src_mac, cs8900_mac, 6);
