@@ -51,12 +51,14 @@ code const long tftp_ack[]=
 #define MAX_PACKAGE 1518
 static struct tftp_status
 {
-	unsigned char running;
-	unsigned char operation;
+	uint filesize;
 	unsigned short port;
 	unsigned short block_n;
 	unsigned char *filename;
 	unsigned char *membase;
+	unsigned char running;
+	unsigned char operation;
+	unsigned char next_stop;
 } t_s;
 static unsigned char rsp_arp_buf[60];
 static unsigned char s_buf[MAX_PACKAGE];
@@ -115,16 +117,22 @@ unsigned short change_end(unsigned short a)
 	return ((0xff & a)<<8) + ((0xff00 & a)>>8);
 }	
 
-void tftp_put(unsigned char* name, unsigned char *buf)
+void tftp_put(unsigned char* name, uint sz, unsigned char *buf)
 {
+	/*init t_s*/
+	t_s.block_n = 0;
 	t_s.filename = name;
 	t_s.membase = buf;
 	t_s.operation = 0;//put file to server
+	t_s.filesize = sz;
+	t_s.next_stop = 0;
 	tftp_run();
 }
 	
 void tftp_get(unsigned char* name, unsigned char *buf)
 {
+	/*init t_s*/
+	t_s.block_n = 1;
 	t_s.filename = name;
 	t_s.membase = buf;
 	t_s.operation = 1;//get file from server
@@ -230,8 +238,6 @@ void setup_tftp_req()
 	unsigned char * s;
 	unsigned short local_port, udp_len;
 
-	/*init t_s*/
-	t_s.block_n = 1;
 	/*setup tftp req package*/
 	lmemset(s_buf, 0, MAX_PACKAGE);
 	lmemcpy(s_buf, tftp_req, 64);
@@ -291,7 +297,7 @@ uint anlz_tftp()
 			t_s.running = 1;	
 		else{
 			t_s.running = 0;
-			lprint("\r\nfile size:0x%x(%d)\r\n", tmp = (t_s.block_n-1)*512 + data_len, tmp);
+			lprint("\r\nfile size:0x%x(%d)\r\n", t_s.filesize = (t_s.block_n-1)*512 + data_len, t_s.filesize);
 		}
 		lmemcpy(t_s.membase, riutp->tftp_packet.tftp_data, data_len);
 		t_s.membase += 512;
@@ -321,6 +327,56 @@ uint anlz_tftp()
 		send_len = 60;
 		t_s.block_n++;
 		return 1;
+	}
+	else{
+		//tftp put case
+		if(riutp->tftp_packet.operation != 0x400 
+			|| change_end(riutp->tftp_packet.block_n) != t_s.block_n){
+			lprint("Unusual error!\r\n");
+			return 0;
+		}
+		t_s.running =1;
+		data_len = (t_s.filesize > 512)?512:t_s.filesize;		
+		con_send('`');
+		if(t_s.next_stop){
+			t_s.running = 0;
+			lprint("\r\n");
+			return 1;
+		}
+		if(data_len != 512){
+			t_s.next_stop = 1;
+		}
+		lmemcpy(riutp->tftp_packet.tftp_data, t_s.membase, data_len);
+		t_s.membase += data_len;
+		t_s.filesize -= data_len;
+		//setup ack package
+		/*setup tftp req package*/
+		lmemset(s_buf, 0, MAX_PACKAGE);
+		lmemcpy(s_buf, tftp_req, 64);
+		/*set 802.3 header*/
+		lmemcpy(sep->dest_mac, server_mac, 6);
+		lmemcpy(sep->src_mac, cs8900_mac, 6);
+
+    		siutp->udp_header.check_sum = 0;
+		siutp->udp_header.src_port = change_end(t_s.port);
+		/*setup ip header*/
+    		lmemcpy(siutp->ip_header.sender_ip, &local_ip, 4);
+    		lmemcpy(siutp->ip_header.target_ip, &server_ip, 4);
+		siutp->ip_header.total_len = change_end(32 + data_len);
+		siutp->ip_header.id = change_end(ipid++);
+		siutp->ip_header.check_sum = 0;
+		siutp->ip_header.check_sum = for_check(&siutp->ip_header.ipv_hdl, 20);
+		/*udp & tftp*/
+		siutp->udp_header.dest_port = riutp->udp_header.src_port;
+		siutp->udp_header.length = change_end(data_len + 12);		
+		siutp->tftp_packet.operation = 0x300;
+		siutp->tftp_packet.block_n = change_end(++t_s.block_n);
+
+		send_len = 46 + data_len;
+		if(send_len<60)
+			send_len = 60;
+		return 1;
+		
 	}
 	return 0;
 }

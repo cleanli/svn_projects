@@ -31,7 +31,7 @@ static const struct command cmd_list[]=
     {"setip",setip,"set ip addr of local & server"},
     {"test",test,"use for debug new command or function"},
     {"tftpget",tftpget,"get file from tftp server"},
-    {"tftpput",tftpput,"put file to tftp server"},
+    {"tftpput",tftpput,"put file to tftp server from membase"},
     {"w",write_mem,"write mem, also can set mem addr"},
     {NULL, NULL, NULL},
 };
@@ -82,14 +82,14 @@ error:
 }
 void tftpput(unsigned char *p)
 {
-	if(get_howmany_para(p) != 1)
+	uint sz;
+	if(get_howmany_para(p) != 2)
 		goto error;
-	while(*p == ' ')
-		p++;
-	tftp_put(p, mrw_addr);
+    	p = str_to_hex(p, &sz);
+	tftp_put(p, sz, mrw_addr);
 	return;
 error:
-    lprint("Error para!\r\ntftpget (name)\r\n");
+    lprint("Error para!\r\ntftpput (filesize) (name)\r\n");
 }
 void setip(unsigned char *p)
 {
