@@ -4,22 +4,6 @@
 #include "interface.h"
 
 #define code
-code const char tftp_req_exam2[]=
-{
-0x00,0xe0,0xb0,0xea,0x14,0xf7,0x08,0x00,  0x3e,0x26,0x0a,0x5b,0x08,0x00,0x45,0x00,
-0x00,0x3d,0x07,0xc4,0x40,0x00,0xff,0x11,  0x7e,0x3c,0xc0,0xa8,0x3a,0x33,0xc0,0xa8,
-0x3a,0x2b,0x05,0xfd,0x00,0x45,0x00,0x29,  0x00,0x00,0x00,0x01,0x73,0x00,0x6f,0x63,
-0x74,0x65,0x74,0x00,0x74,0x69,0x6d,0x65,  0x6f,0x75,0x74,0x00,0x35,0x00,0x62,0x6c,
-0x6b,0x73,0x69,0x7a,0x65,0x00,0x31,0x34,  0x36,0x38,0x00,
-};
-code const char tftp_req_exam[]=
-{
-0x00,0xe0,0xb0,0xea,0x14,0xf7,0x00,0x0c,  0x29,0x50,0xf2,0x0d,0x08,0x00,0x45,0x00,
-0x00,0x32,0x00,0x00,0x40,0x00,0x40,0x11,  0x45,0x12,0xc0,0xa8,0x3a,0x2d,0xc0,0xa8,
-0x3a,0x2b,0x80,0x61,0x00,0x45,0x00,0x1e,  0x46,0x60,0x00,0x01,0x63,0x6c,0x65,0x61,
-0x6e,0x62,0x6f,0x6f,0x74,0x2e,0x62,0x69,  0x6e,0x00,0x6f,0x63,0x74,0x65,0x74,0x00,
-};
-
 code const char tftp_req[]=
 {
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  0x00,0x00,0x00,0x00,0x08,0x00,0x45,0x00,
@@ -27,38 +11,18 @@ code const char tftp_req[]=
 0x00,0x00,0x70,0x23,0x00,0x45,0x00,0x1e,  0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x00,
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
 };
-
-code const long arp_req[]=
-{0xffffffff,0x4408ffff,0x090a0023,0x01000608,
- 0x08000604,0x00010844,0x090a0023,0xc0a83a23,
- 0x00000000,0x0000c0a8,0x3a230000,0x00000000,
- 0x00000000,0x00000000,0x00000000};
-
-code const char arp_resp[]=
-{
-0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x08,0x06,0x00,0x01,
-0x08,0x00,0x06,0x04,0x00,0x02,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-};
-
-code const long tftp_ack[]=
-{0x00508d6e,0x31270844,0x090a0023,0x08004500,
- 0x0020006c,0x00008011,0x44cfc0a8,0x3a23c0a8,
- 0x3a1e0416,0x04e8000c,0x013f0004,0x00010000,
- 0x00000000,0x00000000,0x00000000};
-
 #define MAX_PACKAGE 1518
 static struct tftp_status
 {
 	uint filesize;
-	unsigned short port;
+	unsigned short port;//local port
+	unsigned short server_port;
 	unsigned short block_n;
+	unsigned short max_block;
 	unsigned char *filename;
 	unsigned char *membase;
 	unsigned char running;
 	unsigned char operation;
-	unsigned char next_stop;
 } t_s;
 static unsigned char rsp_arp_buf[60];
 static unsigned char s_buf[MAX_PACKAGE];
@@ -125,7 +89,7 @@ void tftp_put(unsigned char* name, uint sz, unsigned char *buf)
 	t_s.membase = buf;
 	t_s.operation = 0;//put file to server
 	t_s.filesize = sz;
-	t_s.next_stop = 0;
+	t_s.max_block = (t_s.filesize>>9) + 1;
 	tftp_run();
 }
 	
@@ -224,7 +188,7 @@ try_recv:
        		        goto send;
 		}
 		else{
-                	lprint("stop trying, give up.\r\n");
+                	lprint("give up.\r\n");
 			return 0;
 		}
         }
@@ -233,10 +197,10 @@ try_recv:
 	return 1;
 }	
 
-void setup_tftp_req()
+void setup_tftp_package()
 {
 	unsigned char * s;
-	unsigned short local_port, udp_len;
+	unsigned short local_port, udp_len, data_len;
 
 	/*setup tftp req package*/
 	lmemset(s_buf, 0, MAX_PACKAGE);
@@ -245,31 +209,77 @@ void setup_tftp_req()
 	lmemcpy(sep->dest_mac, server_mac, 6);
 	lmemcpy(sep->src_mac, cs8900_mac, 6);
 
-    	siutp->udp_header.check_sum = 0;
-    	local_port = random_u16();
-    	while(local_port < 2000)
-		local_port *= 3;
-	t_s.port = local_port;
-	siutp->udp_header.src_port = change_end(local_port);
-    	udp_len = 17 + lstrlen(t_s.filename);
-    	siutp->udp_header.length = change_end(udp_len);
-	/*setup ip header*/
-    	siutp->ip_header.id = change_end(ipid++);
-    	siutp->ip_header.total_len = change_end(20+udp_len);
     	lmemcpy(siutp->ip_header.sender_ip, &local_ip, 4);
     	lmemcpy(siutp->ip_header.target_ip, &server_ip, 4);
+    	siutp->udp_header.check_sum = 0;
+	siutp->udp_header.dest_port = change_end(t_s.server_port);
+	if(t_s.running == 0){
+    		local_port = random_u16();
+   	 	while(local_port < 2000)
+			local_port *= 3;
+		t_s.port = local_port;
+		siutp->udp_header.src_port = change_end(local_port);
+    		udp_len = 17 + lstrlen(t_s.filename);
+    		siutp->udp_header.length = change_end(udp_len);
+		/*setup ip header*/
+    		siutp->ip_header.id = change_end(ipid++);
+    		siutp->ip_header.total_len = change_end(20+udp_len);
+		if(t_s.operation){
+    			siutp->tftp_packet.operation = change_end(1);
+		}
+		else{
+    			siutp->tftp_packet.operation = change_end(2);
+		}
+		/*setup filename */
+    		s = (char*)&siutp->tftp_packet.block_n;
+    		s = (char*)&siutp->tftp_packet.block_n;
+    		lstrcpy(s, t_s.filename);
+		s += lstrlen(s) + 1;
+	    	lstrcpy(s, "octet");
+		send_len = 51 + lstrlen(t_s.filename);
+		if(send_len < 60)
+			send_len = 60;
+	}
+	else if(t_s.operation == 1){
+		//setup ack package
+		siutp->udp_header.src_port = change_end(t_s.port);
+		/*setup ip header*/
+		siutp->ip_header.total_len = change_end(32);
+		siutp->ip_header.id = change_end(ipid++);
+		/*udp & tftp*/
+		siutp->udp_header.length = change_end(12);
+		siutp->tftp_packet.operation = 0x400;
+		siutp->tftp_packet.block_n = change_end(t_s.block_n);
+
+		send_len = 60;
+		t_s.block_n++;
+		
+	}
+	else if(t_s.operation == 0){
+		data_len = (t_s.filesize > 512)?512:t_s.filesize;		
+		lmemcpy(siutp->tftp_packet.tftp_data, t_s.membase, data_len);
+		t_s.membase += data_len;
+		t_s.filesize -= data_len;
+		/*set 802.3 header*/
+		lmemcpy(sep->dest_mac, server_mac, 6);
+		lmemcpy(sep->src_mac, cs8900_mac, 6);
+
+		siutp->udp_header.src_port = change_end(t_s.port);
+		/*setup ip header*/
+		siutp->ip_header.total_len = change_end(32 + data_len);
+		siutp->ip_header.id = change_end(ipid++);
+		/*udp & tftp*/
+		siutp->udp_header.length = change_end(data_len + 12);		
+		siutp->tftp_packet.operation = 0x300;
+		siutp->tftp_packet.block_n = change_end(t_s.block_n);
+
+		send_len = 46 + data_len;
+		if(send_len<60)
+			send_len = 60;
+		
+	}
 	siutp->ip_header.check_sum = 0;
 	siutp->ip_header.check_sum = for_check(&siutp->ip_header.ipv_hdl, 20);
-    	siutp->tftp_packet.operation = t_s.operation ? change_end(1):change_end(2);
-	/*setup filename */
-    	s = (char*)&siutp->tftp_packet.block_n;
-    	s = (char*)&siutp->tftp_packet.block_n;
-    	lstrcpy(s, t_s.filename);
-	s += lstrlen(s) + 1;
-    	lstrcpy(s, "octet");
-	send_len = 51 + lstrlen(t_s.filename);
-	if(send_len < 60)
-		send_len = 60;
 }
 	
 uint anlz_tftp()
@@ -284,6 +294,7 @@ uint anlz_tftp()
 		lprint("Error message from server: code %x, '%s'\r\n", change_end(riutp->tftp_packet.block_n),riutp->tftp_packet.tftp_data); 
 		return 1;
 	}
+	t_s.server_port = change_end(riutp->udp_header.src_port);
 	if(t_s.operation){
 		//tftp get case
 		if(riutp->tftp_packet.operation != 0x300 
@@ -291,43 +302,17 @@ uint anlz_tftp()
 			lprint("Unusual error!\r\n");
 			return 0;
 		}
+		t_s.running = 1;	
+		setup_tftp_package();
 		data_len = change_end(riutp->udp_header.length) - 12;		
 		con_send('.');
-		if(data_len == 512)
-			t_s.running = 1;	
-		else{
-			t_s.running = 0;
-			lprint("\r\nfile size:0x%x(%d)\r\n", t_s.filesize = (t_s.block_n-1)*512 + data_len, t_s.filesize);
-		}
 		lmemcpy(t_s.membase, riutp->tftp_packet.tftp_data, data_len);
 		t_s.membase += 512;
-		//setup ack package
-		/*setup tftp req package*/
-		lmemset(s_buf, 0, MAX_PACKAGE);
-		lmemcpy(s_buf, tftp_req, 64);
-		/*set 802.3 header*/
-		lmemcpy(sep->dest_mac, server_mac, 6);
-		lmemcpy(sep->src_mac, cs8900_mac, 6);
-
-    		siutp->udp_header.check_sum = 0;
-		siutp->udp_header.src_port = change_end(t_s.port);
-		/*setup ip header*/
-    		lmemcpy(siutp->ip_header.sender_ip, &local_ip, 4);
-    		lmemcpy(siutp->ip_header.target_ip, &server_ip, 4);
-		siutp->ip_header.total_len = change_end(32);
-		siutp->ip_header.id = change_end(ipid++);
-		siutp->ip_header.check_sum = 0;
-		siutp->ip_header.check_sum = for_check(&siutp->ip_header.ipv_hdl, 20);
-		/*udp & tftp*/
-		siutp->udp_header.dest_port = riutp->udp_header.src_port;
-		siutp->udp_header.length = change_end(12);
-		siutp->tftp_packet.operation = 0x400;
-		siutp->tftp_packet.block_n = change_end(t_s.block_n);
-
-		send_len = 60;
-		t_s.block_n++;
-		if(!t_s.running)
+		if(data_len != 512){
+			t_s.running = 0;
         		cs8900_send(s_buf, send_len);
+			lprint("\r\nfile size:0x%x(%d)\r\n", t_s.filesize = (t_s.block_n-1)*512 + data_len, t_s.filesize);
+		}
 		return 1;
 	}
 	else{
@@ -337,48 +322,16 @@ uint anlz_tftp()
 			lprint("Unusual error!\r\n");
 			return 0;
 		}
-		t_s.running =1;
-		//setup ack package
-		/*setup tftp req package*/
-		lmemset(s_buf, 0, MAX_PACKAGE);
-		lmemcpy(s_buf, tftp_req, 64);
-		data_len = (t_s.filesize > 512)?512:t_s.filesize;		
-		con_send('`');
-		if(t_s.next_stop){
+		if(t_s.block_n == t_s.max_block){
 			t_s.running = 0;
 			lprint("\r\n");
 			return 1;
 		}
-		if(data_len != 512){
-			t_s.next_stop = 1;
-		}
-		lmemcpy(siutp->tftp_packet.tftp_data, t_s.membase, data_len);
-		t_s.membase += data_len;
-		t_s.filesize -= data_len;
-		/*set 802.3 header*/
-		lmemcpy(sep->dest_mac, server_mac, 6);
-		lmemcpy(sep->src_mac, cs8900_mac, 6);
-
-    		siutp->udp_header.check_sum = 0;
-		siutp->udp_header.src_port = change_end(t_s.port);
-		/*setup ip header*/
-    		lmemcpy(siutp->ip_header.sender_ip, &local_ip, 4);
-    		lmemcpy(siutp->ip_header.target_ip, &server_ip, 4);
-		siutp->ip_header.total_len = change_end(32 + data_len);
-		siutp->ip_header.id = change_end(ipid++);
-		siutp->ip_header.check_sum = 0;
-		siutp->ip_header.check_sum = for_check(&siutp->ip_header.ipv_hdl, 20);
-		/*udp & tftp*/
-		siutp->udp_header.dest_port = riutp->udp_header.src_port;
-		siutp->udp_header.length = change_end(data_len + 12);		
-		siutp->tftp_packet.operation = 0x300;
-		siutp->tftp_packet.block_n = change_end(++t_s.block_n);
-
-		send_len = 46 + data_len;
-		if(send_len<60)
-			send_len = 60;
+		t_s.running = 1;
+		t_s.block_n++;
+		con_send('`');
+		setup_tftp_package();
 		return 1;
-		
 	}
 	return 0;
 }
@@ -390,6 +343,9 @@ static void tftp_run()
         siutp = (struct ip_udp_tftp*) sep->datas;
         riutp = (struct ip_udp_tftp*) rep->datas;
 
+	t_s.server_port = 69;
+	t_s.port = 0;
+	t_s.running = 0;
 	if(!cs8900_is_ready()){
 		lprint("cs8900 not ready!\r\n");
 		return;
@@ -400,7 +356,7 @@ static void tftp_run()
 		lprint("server no response!\r\n");
 		return;
 	}
-	setup_tftp_req();
+	setup_tftp_package();
 	if(!get_response(anlz_tftp,0)){
 		lprint("server no tftp response!\r\n");
 		return;

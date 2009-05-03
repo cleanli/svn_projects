@@ -9,7 +9,7 @@ Linker script and memory map
                 0x30000000                . = 0x30000000
                 0x30000000                . = ALIGN (0x4)
 
-.text           0x30000000     0x2cb8
+.text           0x30000000     0x2bd0
  ./asm2440.o(*.text)
  .text          0x30000000      0x2a0 ./asm2440.o
                 0x30000000                _start
@@ -84,78 +84,72 @@ Linker script and memory map
                 0x3000179c                random_read_nand
                 0x30001bb8                s3c2440_serial_recv_byte
                 0x30001c4c                s3c2440_is_serial_recv
- .text          0x30001d40      0xc2c ./tftp.o
-                0x30001f54                anlz_arq
-                0x30001e64                tftp_get
+ .text          0x30001d40      0xb44 ./tftp.o
+                0x30001f5c                anlz_arq
+                0x30001e6c                tftp_get
                 0x30001e14                change_end
                 0x30001e00                lstrcpy
                 0x30001e30                tftp_put
-                0x300021b4                setup_tftp_req
                 0x30001dcc                lmemequ
-                0x300020dc                get_response
-                0x300023a4                anlz_tftp
-                0x30001fcc                recv_p
+                0x300020e4                get_response
+                0x3000256c                anlz_tftp
+                0x30001fd4                recv_p
+                0x300021bc                setup_tftp_package
                 0x30001d40                for_check
                 0x30001da4                lstrlen
- .text          0x3000296c      0x34c ./xmodem.o
-                0x30002a18                xmodem_1k_recv
-                0x30002b88                xmodem_1k_send
-                0x300029d0                time_limit_recv_byte
-                0x3000296c                crc16
+ .text          0x30002884      0x34c ./xmodem.o
+                0x30002930                xmodem_1k_recv
+                0x30002aa0                xmodem_1k_send
+                0x300028e8                time_limit_recv_byte
+                0x30002884                crc16
 
-.glue_7         0x30002cb8        0x0
+.glue_7         0x30002bd0        0x0
 
-.glue_7t        0x30002cb8        0x0
-                0x30002cb8                . = ALIGN (0x4)
+.glue_7t        0x30002bd0        0x0
+                0x30002bd0                . = ALIGN (0x4)
 
-.rodata         0x30002cb8      0x2a0
+.rodata         0x30002bd0      0x15a
  *(.rodata)
- .rodata        0x30002cb8      0x114 ./cmd.o
- .rodata        0x30002dcc        0x6 ./m.o
-                0x30002dcc                cs8900_mac
- *fill*         0x30002dd2        0x2 00
- .rodata        0x30002dd4      0x184 ./tftp.o
-                0x30002e1f                tftp_req_exam
-                0x30002edc                arp_resp
-                0x30002f1c                tftp_ack
-                0x30002ea0                arp_req
-                0x30002dd4                tftp_req_exam2
-                0x30002e5f                tftp_req
+ .rodata        0x30002bd0      0x114 ./cmd.o
+ .rodata        0x30002ce4        0x6 ./m.o
+                0x30002ce4                cs8900_mac
+ .rodata        0x30002cea       0x40 ./tftp.o
+                0x30002cea                tftp_req
 
-.rodata.str1.4  0x30002f58      0xe91
+.rodata.str1.4  0x30002d2c      0xe85
  .rodata.str1.4
-                0x30002f58      0xad0 ./cmd.o
+                0x30002d2c      0xad0 ./cmd.o
                                 0xae0 (size before relaxing)
  .rodata.str1.4
-                0x30003a28       0x8c ./cs8900.o
+                0x300037fc       0x8c ./cs8900.o
  .rodata.str1.4
-                0x30003ab4      0x174 ./s3c2440.o
+                0x30003888      0x174 ./s3c2440.o
  .rodata.str1.4
-                0x30003c28      0x17c ./tftp.o
-                                0x180 (size before relaxing)
+                0x300039fc      0x170 ./tftp.o
+                                0x174 (size before relaxing)
  .rodata.str1.4
-                0x30003da4       0x45 ./xmodem.o
+                0x30003b6c       0x45 ./xmodem.o
                                  0x48 (size before relaxing)
-                0x30003dec                . = ALIGN (0x4)
+                0x30003bb4                . = ALIGN (0x4)
 
-.data           0x30003dec       0x18
+.data           0x30003bb4       0x18
  *(.data)
- .data          0x30003dec        0x8 ./cmd.o
-                0x30003dec                local_ip
-                0x30003df0                server_ip
- .data          0x30003df4        0x4 ./cs8900.o
- .data          0x30003df8        0xc ./tftp.o
-                0x30003e04                . = ALIGN (0x4)
-                0x30003e04                __bss_start = .
+ .data          0x30003bb4        0x8 ./cmd.o
+                0x30003bb4                local_ip
+                0x30003bb8                server_ip
+ .data          0x30003bbc        0x4 ./cs8900.o
+ .data          0x30003bc0        0xc ./tftp.o
+                0x30003bcc                . = ALIGN (0x4)
+                0x30003bcc                __bss_start = .
 
-.bss            0x30003e04      0xc94
+.bss            0x30003bcc      0xc98
  *(.bss)
- .bss           0x30003e04       0x28 ./cmd.o
-                0x30003e04                cmd_buf_p
- .bss           0x30003e2c       0x2c ./s3c2440.o
- .bss           0x30003e58      0xc40 ./tftp.o
-                0x30004a98                . = ALIGN (0x4)
-                0x30004a98                _end = .
+ .bss           0x30003bcc       0x28 ./cmd.o
+                0x30003bcc                cmd_buf_p
+ .bss           0x30003bf4       0x2c ./s3c2440.o
+ .bss           0x30003c20      0xc44 ./tftp.o
+                0x30004864                . = ALIGN (0x4)
+                0x30004864                _end = .
 LOAD ./cmd.o
 LOAD ./cs8900.o
 LOAD ./m.o
@@ -169,25 +163,25 @@ LOAD /home/clean/arm-linux/arm-tools/bin/../arm-linux/lib/libm.a
 LOAD /home/clean/arm-linux/arm-tools/lib/gcc-lib/arm-linux/3.3.6/libgcc.a
 OUTPUT(cleanboot.elf elf32-littlearm)
 
-.debug_line     0x00000000      0x7f8
+.debug_line     0x00000000      0x7ef
  .debug_line    0x00000000       0xc0 ./asm2440.o
  .debug_line    0x000000c0      0x1ae ./cmd.o
  .debug_line    0x0000026e       0xd5 ./cs8900.o
  .debug_line    0x00000343       0x44 ./m.o
  .debug_line    0x00000387       0xe1 ./print.o
  .debug_line    0x00000468      0x149 ./s3c2440.o
- .debug_line    0x000005b1      0x1a1 ./tftp.o
- .debug_line    0x00000752       0xa6 ./xmodem.o
+ .debug_line    0x000005b1      0x198 ./tftp.o
+ .debug_line    0x00000749       0xa6 ./xmodem.o
 
-.debug_info     0x00000000     0x2482
+.debug_info     0x00000000     0x2388
  .debug_info    0x00000000       0x5b ./asm2440.o
  .debug_info    0x0000005b      0xab9 ./cmd.o
  .debug_info    0x00000b14      0x512 ./cs8900.o
  .debug_info    0x00001026       0xd3 ./m.o
  .debug_info    0x000010f9      0x2a5 ./print.o
  .debug_info    0x0000139e      0x33b ./s3c2440.o
- .debug_info    0x000016d9      0xb8a ./tftp.o
- .debug_info    0x00002263      0x21f ./xmodem.o
+ .debug_info    0x000016d9      0xa90 ./tftp.o
+ .debug_info    0x00002169      0x21f ./xmodem.o
 
 .debug_abbrev   0x00000000      0xa73
  .debug_abbrev  0x00000000       0x14 ./asm2440.o
@@ -227,7 +221,7 @@ OUTPUT(cleanboot.elf elf32-littlearm)
  .debug_frame   0x000008f8       0xa8 ./xmodem.o
 
 .debug_pubnames
-                0x00000000      0x5cf
+                0x00000000      0x588
  .debug_pubnames
                 0x00000000      0x19d ./cmd.o
  .debug_pubnames
@@ -239,15 +233,15 @@ OUTPUT(cleanboot.elf elf32-littlearm)
  .debug_pubnames
                 0x0000033a      0x12b ./s3c2440.o
  .debug_pubnames
-                0x00000465      0x10f ./tftp.o
+                0x00000465       0xc8 ./tftp.o
  .debug_pubnames
-                0x00000574       0x5b ./xmodem.o
+                0x0000052d       0x5b ./xmodem.o
 
 .debug_ranges   0x00000000       0x38
  .debug_ranges  0x00000000       0x20 ./cmd.o
  .debug_ranges  0x00000020       0x18 ./tftp.o
 
-.debug_str      0x00000000      0x85f
+.debug_str      0x00000000      0x840
  .debug_str     0x00000000      0x283 ./cmd.o
                                 0x2ab (size before relaxing)
  .debug_str     0x00000283      0x11a ./cs8900.o
@@ -258,9 +252,9 @@ OUTPUT(cleanboot.elf elf32-littlearm)
                                  0xe5 (size before relaxing)
  .debug_str     0x00000425       0xcb ./s3c2440.o
                                 0x1b6 (size before relaxing)
- .debug_str     0x000004f0      0x2c9 ./tftp.o
-                                0x3af (size before relaxing)
- .debug_str     0x000007b9       0xa6 ./xmodem.o
+ .debug_str     0x000004f0      0x2aa ./tftp.o
+                                0x37f (size before relaxing)
+ .debug_str     0x0000079a       0xa6 ./xmodem.o
                                 0x123 (size before relaxing)
 
 .comment        0x00000000       0x7e
