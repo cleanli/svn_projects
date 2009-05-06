@@ -10,15 +10,13 @@
 .globl main
 .globl _start
 _start:	b       start_code
-	b	_start
-	b	_start
-	b	_start
-	b	_start
-	b	_start
-	b	_start
-	b	_start
-	b	_start
-	.balignl 16,0xdeadbeef
+        ldr     pc, =0x30000004
+        ldr     pc, =0x30000008
+        ldr     pc, =0x3000000c
+        ldr     pc, =0x30000010
+        ldr     pc, =0x30000014
+        ldr     pc, =0x30000018
+        ldr     pc, =0x3000001c
 .align 4
 
 mem_reg_value:

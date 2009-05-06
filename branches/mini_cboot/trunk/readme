@@ -1,0 +1,4 @@
+mini clean boot v1.2 released:
+1 when power on, will load 0x4000 data from nand flash 0x4000
+2 then it will enter the interface load file from serial. any key will go to command interface; after load file from serial, any key within 1 second will go to cmd interface, or it will run the download program.
+3 in cmmd interface, type go will run the promgram load from nand flash at addr 0x30000000

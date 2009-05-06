@@ -2,6 +2,7 @@
 #include "debug.h"
 #include "print.h"
 
+//#define div(X,Y) (X)/(Y)
 void print_string(unsigned char *s)
 {
         unsigned char c;
@@ -36,6 +37,7 @@ uint div(uint beichushu, uint chushu)
     }
     return shang;
 }
+
 
 unsigned char * num2str(uint jt, unsigned char * s, unsigned char n)
 {

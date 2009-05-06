@@ -50,37 +50,37 @@ Linker script and memory map
  *(.rodata)
  .rodata        0x0000096c       0x38 cmd.o
 
-.rodata.str1.4  0x000009a4      0x20c
+.rodata.str1.4  0x000009a4      0x214
  .rodata.str1.4
-                0x000009a4      0x20c cmd.o
-                                0x210 (size before relaxing)
-                0x00000bb0                . = ALIGN (0x4)
+                0x000009a4      0x214 cmd.o
+                                0x218 (size before relaxing)
+                0x00000bb8                . = ALIGN (0x4)
 
-.data           0x00000bb0       0x28
+.data           0x00000bb8       0x28
  *(.data)
- .data          0x00000bb0       0x28 cmd.o
-                0x00000bd8                . = ALIGN (0x4)
-                0x00000bd8                __bss_start = .
+ .data          0x00000bb8       0x28 cmd.o
+                0x00000be0                . = ALIGN (0x4)
+                0x00000be0                __bss_start = .
 
-.bss            0x00000bd8        0x0
+.bss            0x00000be0        0x0
  *(.bss)
-                0x00000bd8                . = ALIGN (0x4)
-                0x00000bd8                _end = .
-                0x00000bd8                . = ALIGN (0x4)
+                0x00000be0                . = ALIGN (0x4)
+                0x00000be0                _end = .
+                0x00000be0                . = ALIGN (0x4)
 
-._text          0x00000bd8      0x2e0
+._text          0x00000be0      0x2e0
  s3c2440.o(.text)
- .text          0x00000bd8      0x120 s3c2440.o
-                0x00000bd8                s3c2440_serial_send_byte
-                0x00000c3c                nand_read_ll
-                0x00000c00                s3c2440_serial_recv_byte
-                0x00000c28                s3c2440_is_serial_recv
+ .text          0x00000be0      0x120 s3c2440.o
+                0x00000be0                s3c2440_serial_send_byte
+                0x00000c44                nand_read_ll
+                0x00000c08                s3c2440_serial_recv_byte
+                0x00000c30                s3c2440_is_serial_recv
  xmodem.o(.text)
- .text          0x00000cf8      0x1c0 xmodem.o
-                0x00000d40                xmodem_1k_recv
-                0x00000cf8                time_limit_recv_byte
-                0x00000eb8                . = ALIGN (0x4)
-                0x00000eb8                _end = .
+ .text          0x00000d00      0x1c0 xmodem.o
+                0x00000d48                xmodem_1k_recv
+                0x00000d00                time_limit_recv_byte
+                0x00000ec0                . = ALIGN (0x4)
+                0x00000ec0                _end = .
 LOAD asm2440.o
 LOAD m.o
 LOAD cmd.o
@@ -92,13 +92,13 @@ LOAD /home/clean/arm-linux/arm-tools/bin/../arm-linux/lib/libm.a
 LOAD /home/clean/arm-linux/arm-tools/lib/gcc-lib/arm-linux/3.3.6/libgcc.a
 OUTPUT(asm2440.elf elf32-littlearm)
 
-.debug_line     0x00000000      0x367
- .debug_line    0x00000000       0x9f asm2440.o
- .debug_line    0x0000009f       0xd2 cmd.o
- .debug_line    0x00000171       0x41 m.o
- .debug_line    0x000001b2       0xd9 print.o
- .debug_line    0x0000028b       0x67 s3c2440.o
- .debug_line    0x000002f2       0x75 xmodem.o
+.debug_line     0x00000000      0x366
+ .debug_line    0x00000000       0x9e asm2440.o
+ .debug_line    0x0000009e       0xd2 cmd.o
+ .debug_line    0x00000170       0x41 m.o
+ .debug_line    0x000001b1       0xd9 print.o
+ .debug_line    0x0000028a       0x67 s3c2440.o
+ .debug_line    0x000002f1       0x75 xmodem.o
 
 .debug_info     0x00000000      0x948
  .debug_info    0x00000000       0x53 asm2440.o

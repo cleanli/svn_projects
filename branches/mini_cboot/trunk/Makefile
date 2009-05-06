@@ -1,5 +1,5 @@
 ASFLAG=-D__ASSEMBLY__
-CFLAG=-g  -Os   -fno-strict-aliasing  -fno-common -ffixed-r8 -msoft-float -mshort-load-bytes -fno-builtin -ffreestanding -nostdinc -isystem -pipe  -DCONFIG_ARM -D__ARM__ -march=armv4 -mapcs-32 -mno-thumb-interwork -I/home/clean/arm-linux/arm-tools/lib/gcc-lib/arm-linux/3.3.6/include/
+CFLAG=-g  -Os   -fno-strict-aliasing  -fno-common -ffixed-r8 -mshort-load-bytes -fno-builtin -ffreestanding -nostdinc -isystem -pipe  -DCONFIG_ARM -D__ARM__ -march=armv4 -mapcs-32 -mno-thumb-interwork -I/home/clean/arm-linux/arm-tools/lib/gcc-lib/arm-linux/3.3.6/include/
 LDFLAG=-Bstatic -L /home/clean/arm-linux/arm-tools/bin/../lib/gcc-lib/arm-linux/3.3.6 -lgcc -lm /home/clean/arm-linux/arm-tools/lib/gcc-lib/arm-linux/3.3.6/libgcc.a
 
 all:	minicb.bin
