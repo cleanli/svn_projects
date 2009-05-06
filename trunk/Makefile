@@ -135,7 +135,7 @@ objs : $(OBJS)
 #
 $(PROGRAM).bin : $(PROGRAM).elf 
 	arm-linux-objcopy -O binary $(PROGRAM).elf $(PROGRAM).bin      
-	arm-linux-objdump -d $(PROGRAM).elf > $(PROGRAM).antiasm
+	arm-linux-objdump -d -S $(PROGRAM).elf > $(PROGRAM).antiasm
 	#cp $(PROGRAM).bin /var/ftp/pub
 	tftp -p -l $(PROGRAM).bin 192.168.58.43
 

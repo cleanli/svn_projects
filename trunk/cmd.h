@@ -13,6 +13,7 @@ struct command{
      unsigned char * cmd_des;
 };
 
+void prt(unsigned char *p);
 void ndbb(unsigned char *p);
 void test(unsigned char *p);
 void reboot(unsigned char *p);

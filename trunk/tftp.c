@@ -252,7 +252,6 @@ void setup_tftp_package()
 		siutp->tftp_packet.block_n = change_end(t_s.block_n);
 
 		send_len = 60;
-		t_s.block_n++;
 		
 	}
 	else if(t_s.operation == 0){
@@ -313,6 +312,7 @@ uint anlz_tftp()
         		cs8900_send(s_buf, send_len);
 			lprint("\r\nfile size:0x%x(%d)\r\n", t_s.filesize = (t_s.block_n-1)*512 + data_len, t_s.filesize);
 		}
+		t_s.block_n++;
 		return 1;
 	}
 	else{

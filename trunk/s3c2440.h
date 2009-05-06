@@ -37,6 +37,12 @@
 #define mem_w(RADDR, DATA) *(volatile unsigned short*)(CS8900_MEM_BASE + RADDR) = DATA
 #define MEM_ADDR(RADDR) (CS8900_MEM_BASE + RADDR)
 
+/*Serial reg*/
+#define SRCPND *(volatile unsigned long *)0x4a000000
+#define INTMOD *(volatile unsigned long *)0x4a000004
+#define INTMASK *(volatile unsigned long *)0x4a000008
+#define INTPND *(volatile unsigned long *)0x4a000010
+
 /* low level nand read function */
 int nand_read_ll(unsigned char *buf, unsigned long start_addr, int size);
 void s3c2440_serial_init();

@@ -8,9 +8,11 @@ static uint get_howmany_para(unsigned char *s);
 static unsigned char * str_to_hex(unsigned char *s, uint * result);
 static unsigned char cmd_buf[COM_MAX_LEN];
 uint cmd_buf_p = 0;
+extern void test_int();
 
 static const struct command cmd_list[]=
 {
+    {"cpsr",prt,"display the value in CPSR of cpu"},
     {"gfbs",get_file_by_serial,"get file by serial"},
     {"go",go,"jump to ram specified addr to go"},
     {"help",print_help,"help message"},
@@ -42,7 +44,20 @@ uint server_ip = IPADDR(192, 168, 58, 43);
 //static uint server_ip = 192<<24|168<<16|58<<8|43;
 
 extern const unsigned char * cs8900_mac[];
-
+extern uint get_psr();
+/*
+uint get_cpsr()
+{
+	uint a;
+	__asm__ __volatile__("mrs %0, cpsr\n\t":"=r"::"r0");
+	return a;
+}
+*/
+void prt(unsigned char *p)
+{
+	//get_psr();
+	lprint("current CPSR = 0x%x\r\n", get_psr());
+}
 void test(unsigned char *p)
 {
 /*
@@ -59,7 +74,10 @@ void test(unsigned char *p)
 /*
         print_mem(cs8900_mac, 6);
 */
+/*
 	test_random();
+*/
+	test_int();
 }
 
 void reboot(unsigned char *p)
@@ -522,16 +540,19 @@ void lmemset(unsigned char *d,unsigned char v,unsigned int n)
 
 void handle_cmd()
 {
-    unsigned char i = 0, *p_cmd, *p_buf;
+    unsigned char i = 0, *p_cmd, *p_buf, *cmd_start;
 
     lprint("\r\n");
-    if(!cmd_buf[0])
+    cmd_start = cmd_buf;
+    while(*cmd_start == ' ')
+	cmd_start++;
+    if(!*cmd_start)
 	return;
     while(1){
 	    if(cmd_list[i].cmd_name == NULL)
 		    break;
 	    p_cmd=cmd_list[i].cmd_name;
-	    p_buf=cmd_buf;
+	    p_buf=cmd_start;
 	    while(*p_cmd){
 		    if(*p_buf != *p_cmd)
 			    break;
@@ -547,31 +568,57 @@ void handle_cmd()
     lprint("Unknow command:%s\r\n",cmd_buf);
 }
 
-void run_clean_boot()
+static void get_cmd()
 {
 	unsigned char c;
-	
-	mrw_addr = 0;
-	lprint("\r\n\r\nHello, this is clean_boot v%sbuild on %s %s.\r\n", CLEAN_BOOT_VERSION,__DATE__,__TIME__);
+start_get_cmd:
+	lprint("\r\nCleanBoot@%s>", PLATFORM);
 	lmemset(cmd_buf, 0, COM_MAX_LEN);
 	cmd_buf_p = 0;
-	lprint("\r\nCleanBoot@%s>", PLATFORM);
 	while(1){
 		c = con_recv();
+/*
 		if(c == ENTER_CHAR){
-			handle_cmd();
-			lmemset(cmd_buf, 0, COM_MAX_LEN);
-			cmd_buf_p = 0;
-			lprint("\r\nCleanBoot@%s>", PLATFORM);
+			return;
 		}else if(c == 0x1b){
-			lmemset(cmd_buf, 0, COM_MAX_LEN);
-			cmd_buf_p = 0;
-			lprint("\r\nCleanBoot@%s>", PLATFORM);
+			goto start_get_cmd;
 		}else{
 			if(cmd_buf_p < (COM_MAX_LEN - 1)){
 				cmd_buf[cmd_buf_p++] = c;
 				con_send(c);
 			}
 		}
+*/
+
+		switch(c){
+			case ENTER_CHAR:
+				return;
+			case 0x1b:
+				goto start_get_cmd;
+			case 0x08:
+				if(cmd_buf_p > 0){
+					cmd_buf[--cmd_buf_p] = 0;
+					print_string("\b \b");
+				}
+				continue;
+			default:
+				if(cmd_buf_p < (COM_MAX_LEN - 1)){
+					cmd_buf[cmd_buf_p++] = c;
+					con_send(c);
+				}
+		}
+
+	}
+}	
+
+void run_clean_boot()
+{
+	mrw_addr = 0;
+	lprint("\r\n\r\nHello, this is clean_boot v%sbuild on %s %s.\r\n", CLEAN_BOOT_VERSION,__DATE__,__TIME__);
+	lmemset(cmd_buf, 0, COM_MAX_LEN);
+	cmd_buf_p = 0;
+	while(1){
+		get_cmd();
+		handle_cmd();
 	}
 }

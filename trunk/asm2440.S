@@ -8,15 +8,17 @@
 .globl nand_read_ll
 .globl main
 .globl _start
+.globl get_psr
+.globl test_int
+.globl irq_handle
 _start:	b       start_code
-	b	_start
-	b	_start
-	b	_start
-	b	_start
-	b	_start
-	b	_start
-	b	_start
-	b	_start
+	b       handle_int4
+	b       handle_int8
+	b       handle_intc
+	b       handle_int10
+	b       handle_int14
+	b       handle_int18
+	b       handle_int1c
 	.balignl 16,0xdeadbeef
 .align 4
 
@@ -64,7 +66,7 @@ start_code:
 	/*
 	 * mask all IRQs by setting all bits in the INTMR - default
 	 */
-	mov	r1, #0xffffffff
+	mov	r1, #0xfffffffe
 	ldr	r0, =INTMSK
 	str	r1, [r0]
 
@@ -75,12 +77,16 @@ start_code:
 /*******************************************************************************/
 #  define GPFCON                0x56000050
 #  define GPFDAT                0x56000054      /*  */
+#  define EXTINT0               0x56000088
 #  define LOCKTIME              0x4C000000
 #  define MPLLCON               0x4C000004
 #  define UPLLCON               0x4C000008
 
         ldr     r0, =GPFCON
-        mov     r1, #0x5500
+        ldr     r1, =0x5502
+        str     r1, [r0]
+        ldr     r0, =EXTINT0
+        ldr     r1, =0x2
         str     r1, [r0]
 
         @initialize clock
@@ -129,10 +135,6 @@ loop10:
         cmp     r2, r0
         bne     loop10
 
-        ldr     r0, =GPFDAT
-        mov     r1, #0x50
-        str     r1, [r0]
-
 #define GPHCON  0x56000070
 #define GPHUP   0x56000078
 #define ULCON0  0x50000000
@@ -159,6 +161,10 @@ loop10:
         ldr     r0, =UBRDIV0
         mov     r1, #0x1b
         str     r1, [r0]        /*set baudrate 115200bps*/
+
+        ldr     r0, =GPFDAT
+        mov     r1, #0x30
+        str     r1, [r0]
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @
 @ copy code to ram from nand
@@ -196,6 +202,7 @@ loop10:
         ldr     r2, [r1, #oNFCONT]
         orr     r2, r2, #0x2            @ Flash Memory Chip Disable
         str     r2, [r1, #oNFCONT]
+
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	@judge if in steppingstone
 	mov	r0, pc
@@ -203,7 +210,6 @@ loop10:
 	bgt	jump_to_ram	@not in steppingstone, already in dram, go without copying nand code
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
         @ get ready to call C functions (for nand_read())
         @ldr     sp, DW_STACK_START      @ has been setuped at start
         mov     fp, #0                  @ no previous frame, so fp=0
@@ -235,6 +241,23 @@ go_next:
 	
 	@jump to ram to run
 jump_to_ram:
+	@init stack
+	msr	cpsr, #0xd1
+	ldr	sp, =0x30102000
+	msr	cpsr, #0xd2
+	ldr	sp, =0x30103000
+	msr	cpsr, #0xd3
+	ldr	sp, =0x30104000
+	msr	cpsr, #0xd7
+	ldr	sp, =0x30105000
+	msr	cpsr, #0xdb
+	ldr	sp, =0x30106000
+	msr	cpsr, #0xdf
+	ldr	sp, =0x30107000
+	@open interrupt and switch to user mode
+	msr	cpsr, #0x10
+	ldr	sp, =0x30108000
+
 	ldr     r1, =here_is_ram
         add     pc, r1, #0
         nop
@@ -249,5 +272,63 @@ here_is_ram:
         b       main
                                                     
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-                                           
+get_psr:
+	mrs 	r0, cpsr
+	mov	pc, lr
+
+test_int:
+/*
+	stmfd	sp!, {lr}
+	mrs	r0, cpsr
+	bl	print_hex
+	ldr	r0, =changeline
+	bl	print_string
+	swi	0
+	mrs	r0, cpsr
+	bl	print_hex
+	ldr	r0, =changeline
+	bl	print_string
+	ldmfd   sp!, {pc}^
+	mov	pc, lr
+*/
+	swi	0
+        ldr	pc, =0                                   
+
+handle_int4:
+        mov    	r0, #'4'
+	bl	s3c2440_serial_send_byte
+	b	_start
+handle_int8:
+	mov 	pc, lr
+	stmfd	sp!, {r0-r12,lr}
+	mrs	r0, spsr
+	bl 	print_hex
+	mrs	r0, cpsr
+	bl	print_hex
+	mov	r0, #0xff000000
+	bl	print_hex
+	ldmfd   sp!, {r0-r12,pc}^
+handle_intc:
+        mov    	r0, #'c'
+	bl	s3c2440_serial_send_byte
+	b	.
+handle_int10:
+        mov    	r0, #'0'
+	bl	s3c2440_serial_send_byte
+	b	.
+handle_int14:
+        mov    	r0, #'E'
+	bl	s3c2440_serial_send_byte
+	b	.
+handle_int18:
+	sub	lr, lr, #4
+	stmfd	sp!, {r0-r12,lr}
+	bl	irq_handle
+	ldmfd   sp!, {r0-r12,pc}^
+handle_int1c:
+        mov    	r0, #'F'
+	bl	s3c2440_serial_send_byte
+	b	.
 /*****************************************************************************/
+changeline:
+	.string "\r\n"

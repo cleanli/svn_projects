@@ -328,3 +328,11 @@ void test_random()
 	lprint("ready pointer is 0x%x, now to use is 0x%x\r\n", newrandom&0xf, userandom&0xf);
 	print_mem(random, 32);
 }
+
+void irq_handle()
+{
+	lprint("\r\n---Entering IRQ---\r\nSRCPND = 0x%x\r\nINTPND = 0x%x\r\n", SRCPND, INTPND);
+	INTPND = INTPND;
+	SRCPND = SRCPND;
+	lprint("after clear:\r\nSRCPND = 0x%x\r\nINTPND = 0x%x\r\n--- Return IRQ ---", SRCPND, INTPND);
+}
