@@ -9,78 +9,78 @@ Linker script and memory map
                 0x00000000                . = 0x0
                 0x00000000                . = ALIGN (0x4)
 
-.text           0x00000000      0x96c
+.text           0x00000000      0x9ec
  asm2440.o(.text)
- .text          0x00000000      0x210 asm2440.o
+ .text          0x00000000      0x290 asm2440.o
                 0x00000000                _start
  cmd.o(.text)
- .text          0x00000210      0x514 cmd.o
-                0x0000065c                run_clean_boot
-                0x00000554                lmemcpy
-                0x00000238                print_help
-                0x000004e8                read_mem
-                0x00000210                go
-                0x00000394                print_mem
-                0x0000045c                write_mem
-                0x00000278                asc_to_hex
-                0x00000580                lmemset
-                0x000005a4                handle_cmd
-                0x0000030c                str_to_hex
-                0x00000228                get_file_by_serial
-                0x000002b4                get_howmany_para
+ .text          0x00000290      0x514 cmd.o
+                0x000006dc                run_clean_boot
+                0x000005d4                lmemcpy
+                0x000002b8                print_help
+                0x00000568                read_mem
+                0x00000290                go
+                0x00000414                print_mem
+                0x000004dc                write_mem
+                0x000002f8                asc_to_hex
+                0x00000600                lmemset
+                0x00000624                handle_cmd
+                0x0000038c                str_to_hex
+                0x000002a8                get_file_by_serial
+                0x00000334                get_howmany_para
  m.o(.text)
- .text          0x00000724        0x4 m.o
-                0x00000724                main
+ .text          0x000007a4        0x4 m.o
+                0x000007a4                main
  print.o(.text)
- .text          0x00000728      0x244 print.o
-                0x00000744                halfbyte2char
-                0x000008b8                lprint
-                0x000007ac                num2str
-                0x00000868                print_uint
-                0x00000890                print_hex
-                0x00000728                print_string
-                0x00000768                div
+ .text          0x000007a8      0x244 print.o
+                0x000007c4                halfbyte2char
+                0x00000938                lprint
+                0x0000082c                num2str
+                0x000008e8                print_uint
+                0x00000910                print_hex
+                0x000007a8                print_string
+                0x000007e8                div
 
-.glue_7         0x0000096c        0x0
+.glue_7         0x000009ec        0x0
 
-.glue_7t        0x0000096c        0x0
-                0x0000096c                . = ALIGN (0x4)
+.glue_7t        0x000009ec        0x0
+                0x000009ec                . = ALIGN (0x4)
 
-.rodata         0x0000096c       0x38
+.rodata         0x000009ec       0x38
  *(.rodata)
- .rodata        0x0000096c       0x38 cmd.o
+ .rodata        0x000009ec       0x38 cmd.o
 
-.rodata.str1.4  0x000009a4      0x214
+.rodata.str1.4  0x00000a24      0x1f8
  .rodata.str1.4
-                0x000009a4      0x214 cmd.o
-                                0x218 (size before relaxing)
-                0x00000bb8                . = ALIGN (0x4)
+                0x00000a24      0x1f8 cmd.o
+                                0x1fc (size before relaxing)
+                0x00000c1c                . = ALIGN (0x4)
 
-.data           0x00000bb8       0x28
+.data           0x00000c1c       0x28
  *(.data)
- .data          0x00000bb8       0x28 cmd.o
-                0x00000be0                . = ALIGN (0x4)
-                0x00000be0                __bss_start = .
+ .data          0x00000c1c       0x28 cmd.o
+                0x00000c44                . = ALIGN (0x4)
+                0x00000c44                __bss_start = .
 
-.bss            0x00000be0        0x0
+.bss            0x00000c44        0x0
  *(.bss)
-                0x00000be0                . = ALIGN (0x4)
-                0x00000be0                _end = .
-                0x00000be0                . = ALIGN (0x4)
+                0x00000c44                . = ALIGN (0x4)
+                0x00000c44                _end = .
+                0x00000c44                . = ALIGN (0x4)
 
-._text          0x00000be0      0x2e0
+._text          0x00000c44      0x2f0
  s3c2440.o(.text)
- .text          0x00000be0      0x120 s3c2440.o
-                0x00000be0                s3c2440_serial_send_byte
-                0x00000c44                nand_read_ll
-                0x00000c08                s3c2440_serial_recv_byte
-                0x00000c30                s3c2440_is_serial_recv
+ .text          0x00000c44      0x130 s3c2440.o
+                0x00000c44                s3c2440_serial_send_byte
+                0x00000ca8                nand_read_ll
+                0x00000c6c                s3c2440_serial_recv_byte
+                0x00000c94                s3c2440_is_serial_recv
  xmodem.o(.text)
- .text          0x00000d00      0x1c0 xmodem.o
-                0x00000d48                xmodem_1k_recv
-                0x00000d00                time_limit_recv_byte
-                0x00000ec0                . = ALIGN (0x4)
-                0x00000ec0                _end = .
+ .text          0x00000d74      0x1c0 xmodem.o
+                0x00000dbc                xmodem_1k_recv
+                0x00000d74                time_limit_recv_byte
+                0x00000f34                . = ALIGN (0x4)
+                0x00000f34                _end = .
 LOAD asm2440.o
 LOAD m.o
 LOAD cmd.o
@@ -92,13 +92,13 @@ LOAD /home/clean/arm-linux/arm-tools/bin/../arm-linux/lib/libm.a
 LOAD /home/clean/arm-linux/arm-tools/lib/gcc-lib/arm-linux/3.3.6/libgcc.a
 OUTPUT(asm2440.elf elf32-littlearm)
 
-.debug_line     0x00000000      0x366
- .debug_line    0x00000000       0x9e asm2440.o
- .debug_line    0x0000009e       0xd2 cmd.o
- .debug_line    0x00000170       0x41 m.o
- .debug_line    0x000001b1       0xd9 print.o
- .debug_line    0x0000028a       0x67 s3c2440.o
- .debug_line    0x000002f1       0x75 xmodem.o
+.debug_line     0x00000000      0x37c
+ .debug_line    0x00000000       0xb0 asm2440.o
+ .debug_line    0x000000b0       0xd2 cmd.o
+ .debug_line    0x00000182       0x41 m.o
+ .debug_line    0x000001c3       0xd9 print.o
+ .debug_line    0x0000029c       0x6b s3c2440.o
+ .debug_line    0x00000307       0x75 xmodem.o
 
 .debug_info     0x00000000      0x948
  .debug_info    0x00000000       0x53 asm2440.o

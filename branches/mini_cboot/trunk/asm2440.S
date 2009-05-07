@@ -6,7 +6,7 @@
  */
 
 .globl send_string
-.globl serial_send_byte
+.globl s3c2440_serial_send_byte
 .globl main
 .globl _start
 _start:	b       start_code
@@ -41,27 +41,26 @@ start_code:
 	/*
 	 * set the cpu to SVC32 mode
 	 */
-	mrs	r0,cpsr
-	bic	r0,r0,#0x1f
-	orr	r0,r0,#0xd3
-	msr	cpsr,r0
+	msr	cpsr,#0xd3
 
 
 #  define pWTCON		0x53000000
 #  define INTMSK		0x4A000008	/* Interupt-Controller base addresses */
 #  define INTSUBMSK	0x4A00001C
 #  define CLKDIVN	0x4C000014	/* clock divisor register */
-
+/*diable wtd*/
 	ldr     r0, =pWTCON
 	mov     r1, #0x0
 	str     r1, [r0]
 
 /*init sp*/
+	@ldr	sp, =0x32ef0000
 	ldr	sp, =0x00000ffc
 
 	/*
 	 * mask all IRQs by setting all bits in the INTMR - default
 	 */
+/*
 	mov	r1, #0xffffffff
 	ldr	r0, =INTMSK
 	str	r1, [r0]
@@ -69,6 +68,7 @@ start_code:
 	ldr	r1, =0x3ff
 	ldr	r0, =INTSUBMSK
 	str	r1, [r0]
+*/
 
 /*******************************************************************************/
 #  define GPFCON                0x56000050
@@ -76,10 +76,11 @@ start_code:
 #  define LOCKTIME              0x4C000000
 #  define MPLLCON               0x4C000004
 #  define UPLLCON               0x4C000008
-
+/*
         ldr     r0, =GPFCON
         mov     r1, #0x5500
         str     r1, [r0]
+*/
 
         @initialize clock
         ldr     r0, =LOCKTIME
@@ -155,6 +156,8 @@ loop10:
         ldr     r0, =UBRDIV0
         mov     r1, #0x1b
         str     r1, [r0]        /*set baudrate 115200bps*/
+@mov	r0, #'A'
+@bl	s3c2440_serial_send_byte
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @
@@ -195,16 +198,55 @@ loop10:
         @ get ready to call C functions (for nand_read())
         @ldr     sp, DW_STACK_START      @ has been setuped at start
 
-#define TEXT_RAM_BASE   0x30000000
+#define TEXT_RAM_BASE   0x33ffc000
 #define TEXT_NAND_BASE  0x4000
 #define TEXT_SIZE       0x4000
 
-        @ copy
+        @ copy minicb ENV block to ram base
         ldr     r0, =TEXT_RAM_BASE
         ldr     r1, =TEXT_NAND_BASE
         ldr     r2, =TEXT_SIZE
         bl      nand_read_ll
+	@ find the active para, the first 0xffffffff
+        ldr     r4, =TEXT_RAM_BASE
+        ldr     r5, =TEXT_RAM_BASE + TEXT_SIZE
+        ldr     r6, =0xffffffff
+loop101:
+        ldr     r7, [r5, #-4]!
+        cmp     r7, r6
+        bne     found_it
+	cmp	r4, r5
+	beq	main	@if not found go strait to main
+	b	loop101
+/*the para integer in nand should be : Rambase, Nandbase, Copysize*/	
+found_it:
+	cmp	r7, #0
+	beq	main
+	ldr	r0, =press_key
+	bl	print_string
 
-        b       main
+	mov	r0, #0x200000	@delay time
+        ldr     r1, =TEXT_RAM_BASE + TEXT_SIZE	@no use value addr
+	bl	time_limit_recv_byte
+	cmp	r0, #0		@if key pressed, 
+	beq	main		@go to main
+
+	mov	r2, r7		@or it will be the Copy Size
+	ldr	r1, [r5, #-4]!	@before it is nand base
+	ldr	r0, [r5, #-4]!	@before it is ram base
+	stmfd	sp!, {r0-r2}
+	mov	r3, r2
+	mov	r2, r1
+	mov	r1, r0
+	ldr	r0, =print_para
+	bl	lprint
+	ldmfd	sp!, {r0-r2}
+	mov	r5, r0		@store ram base 
+        bl      nand_read_ll	@copy real program
+	mov	pc, r5		@run the program
+press_key:
+	.string "\r\nAny key stop autoboot...\r\n"
+print_para:
+	.string "ram=%x nand=%x size=%x\r\n"
                                            
 /*****************************************************************************/

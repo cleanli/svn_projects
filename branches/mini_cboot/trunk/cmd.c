@@ -51,7 +51,7 @@ void get_file_by_serial(unsigned char *para)
 void print_help(unsigned char *para)
 {
     uint i = 0;
-    lprint("Available cmd is:\r\n");
+    lprint("Cmd:\r\n");
     while(1){
             if(cmd_list[i].cmd_name == NULL)
                     break;
@@ -116,7 +116,7 @@ void print_mem(unsigned char *p)
     str_to_hex(p, &length);
 print:
     cp = (unsigned char *)mrw_addr;
-    lprint("Start print 0x%x mem content @%x:\r\n", length, (uint)mrw_addr);
+    lprint("Print 0x%x mem content @%x:\r\n", length, (uint)mrw_addr);
     while(length){
 	lprint("\r\n");
 	for(i=0;i<8;i++){
@@ -129,7 +129,7 @@ print:
     return;
 
 error:
-    lprint("Error para!\r\npm [length](default 0x80 if no this argu)\r\n");
+    lprint("Error para!\r\npm [length](0x80 if no this argu)\r\n");
 
 }
 

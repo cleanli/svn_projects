@@ -23,8 +23,8 @@ asm2440.elf:	asm2440.o asm2440.lds m.o s3c2440.o print.o cmd.o xmodem.o
 
 minicb.bin:	asm2440.elf
 	arm-linux-objcopy --gap-fill=0xff -O binary asm2440.elf minicb.bin	
-	arm-linux-objdump -d asm2440.elf > asm2440.antiasm
-	cp minicb.bin /var/ftp/pub
+	arm-linux-objdump -d -S asm2440.elf > asm2440.antiasm
+	tftp -p -l minicb.bin 192.168.58.43
 
 clean:
 	rm -rf *.o *.elf *.map *.bin *.antiasm

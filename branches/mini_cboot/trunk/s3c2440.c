@@ -50,7 +50,7 @@ int nand_read_ll(unsigned char *buf, unsigned long start_addr, int size)
 {
         int i, j;
 
-//        NAND_CHIP_ENABLE;
+        NAND_CHIP_ENABLE;
 
         for(i=start_addr; i < (start_addr + size);) {
                 /* READ0 */

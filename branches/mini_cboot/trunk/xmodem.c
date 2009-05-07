@@ -1,5 +1,6 @@
 #include "xmodem.h"
 #include "type.h"
+#include "debug.h"
 #include "interface.h"
 
 uint time_limit_recv_byte(uint limit, unsigned char * c)
