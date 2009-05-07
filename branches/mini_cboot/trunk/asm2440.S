@@ -222,15 +222,6 @@ loop101:
 found_it:
 	cmp	r7, #0
 	beq	main
-	ldr	r0, =press_key
-	bl	print_string
-
-	mov	r0, #0x200000	@delay time
-        ldr     r1, =TEXT_RAM_BASE + TEXT_SIZE	@no use value addr
-	bl	time_limit_recv_byte
-	cmp	r0, #0		@if key pressed, 
-	beq	main		@go to main
-
 	mov	r2, r7		@or it will be the Copy Size
 	ldr	r1, [r5, #-4]!	@before it is nand base
 	ldr	r0, [r5, #-4]!	@before it is ram base
@@ -240,13 +231,23 @@ found_it:
 	mov	r1, r0
 	ldr	r0, =print_para
 	bl	lprint
+
+	ldr	r0, =press_key
+	bl	print_string
+
+	mov	r0, #0x160000	@delay time
+        ldr     r1, =TEXT_RAM_BASE + TEXT_SIZE	@no use value addr
+	bl	time_limit_recv_byte
+	cmp	r0, #0		@if key pressed, 
+	beq	main		@go to main
+
 	ldmfd	sp!, {r0-r2}
 	mov	r5, r0		@store ram base 
         bl      nand_read_ll	@copy real program
 	mov	pc, r5		@run the program
 press_key:
-	.string "\r\nAny key stop autoboot...\r\n"
+	.string "Any key stop autoboot...\r\n"
 print_para:
-	.string "ram=%x nand=%x size=%x\r\n"
+	.string "\r\nram=%x nand=%x size=%x\r\n"
                                            
 /*****************************************************************************/
