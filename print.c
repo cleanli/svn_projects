@@ -18,9 +18,9 @@ void print_string(const unsigned char *s)
 		con_send(*s++);
 }
 
-unsigned char halfbyte2char(unsigned char c)
+unsigned char print_halfbyte(unsigned char c)
 {
-        return ((c & 0x0f) < 0x0a)?(0x30 + c):('A' + c - 0x0a);
+        con_send (((c & 0x0f) < 0x0a)?(0x30 + c):('A' + c - 0x0a));
 }
 
 /*
@@ -84,20 +84,19 @@ void print_hex(uint num)
         print_string(nc);
 }
 */
-/*
-void print_ch(uch c)
+
+void print_ch(uint c)
 {
-	con_send(halfbyte2char((c & 0xf0)>>4));
-	con_send(halfbyte2char((c & 0x0f)));
+	print_halfbyte((c & 0xf0)>>4);
+	print_halfbyte((c & 0x0f));
 }
-*/
+
 void print_hex(uint num)
 {
-	int i = 8;
-	while(i--){
-		con_send(halfbyte2char((num & 0xf0000000)>>28));
-		num <<= 4;
-	}
+	print_ch(num>>24);
+	print_ch(num>>16);
+	print_ch(num>>8);
+	print_ch(num);
 }
 
 void lprint(const unsigned char * fmt, ...)
@@ -128,8 +127,8 @@ void lprint(const unsigned char * fmt, ...)
                 print_uint(d);
                 break;
 	    case 'c':
-                d = va_arg(ap, char);
-                send_int(d);
+                d = va_arg(ap, uint);
+                print_ch(d);
                 break;
 	    */
 	    case 'x':

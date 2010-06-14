@@ -118,15 +118,15 @@ void print_mem(unsigned char *p)
     str_to_hex(p, &length);
 print:
     cp = (unsigned char *)mrw_addr;
-    lprint("0x%x bytes @%x:\n", length, (uint)mrw_addr);
     while(length){
-	lprint("\n");
-	for(i=0;i<8;i++){
+	lprint("\n%x: ", (uint)cp);
+	for(i=0;i<16;i++){
 		length--;
-		lprint("%x ", *cp++);
+		print_ch(*cp++);
+		con_send(i == 7 ? '-':' ');
 	}
     }
-    lprint("\n\nEnd @%x.\n", (uint)mrw_addr);
+    con_send('\n');
 
     return;
 
