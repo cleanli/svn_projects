@@ -3,7 +3,7 @@
 #include "print.h"
 
 //#define div(X,Y) (X)/(Y)
-void print_string(unsigned char *s)
+void print_string(const unsigned char *s)
 {
 	/*
         unsigned char c;
@@ -84,7 +84,13 @@ void print_hex(uint num)
         print_string(nc);
 }
 */
-
+/*
+void print_ch(uch c)
+{
+	con_send(halfbyte2char((c & 0xf0)>>4));
+	con_send(halfbyte2char((c & 0x0f)));
+}
+*/
 void print_hex(uint num)
 {
 	int i = 8;

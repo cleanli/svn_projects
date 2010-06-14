@@ -19,7 +19,7 @@ static const struct command cmd_list[]=
     {"w",write_mem},
     {NULL, NULL},
 };
-static uint * mrw_addr = 0x30000000;
+static uint * mrw_addr;
 
 void go(unsigned char *para)
 {
@@ -118,20 +118,20 @@ void print_mem(unsigned char *p)
     str_to_hex(p, &length);
 print:
     cp = (unsigned char *)mrw_addr;
-    lprint("Print 0x%x mem content @%x:\n", length, (uint)mrw_addr);
+    lprint("0x%x bytes @%x:\n", length, (uint)mrw_addr);
     while(length){
 	lprint("\n");
 	for(i=0;i<8;i++){
 		length--;
-		lprint("%x\t", *cp++);
+		lprint("%x ", *cp++);
 	}
     }
-    lprint("\nPrint end @%x.\n", (uint)mrw_addr);
+    lprint("\n\nEnd @%x.\n", (uint)mrw_addr);
 
     return;
 
 error:
-    lprint("Error para!\npm [length](0x80 if no this argu)\n");
+    lprint("Err!\npm [length](0x80 default)\n");
 
 }
 
@@ -153,7 +153,7 @@ write:
     return;
 
 error:
-    lprint("Error para!\nw (hex addr) [(hex addr)](last addr if no this argu)\n");
+    lprint("Err!\nw (hex addr) [(hex addr)](last addr if no this argu)\n");
 
 }
 
@@ -176,7 +176,7 @@ read:
     return;
 
 error:
-    lprint("Error para!\nr [(hex addr)](last addr if no this argu)\n");
+    lprint("Err!\nr [(hex addr)](last addr if no this argu)\n");
 
 }
 
@@ -195,7 +195,7 @@ void nandcopy(unsigned char *p)
     return;
 
 error:
-    lprint("Error para!\nnandcopy (hex addr)(hex size) nand read cmd\n");
+    lprint("Err!\nnandcopy hexaddr hexsize\n");
 
 }
 
@@ -215,7 +215,7 @@ void nandwb(unsigned char *p)
     return;
 
 error:
-    lprint("Error para!\nnandwb (hex addr)(hex char) random write nand\n");
+    lprint("Err!\nnandwb hexaddr hexchar\n");
 
 }
 
@@ -257,7 +257,7 @@ void handle_cmd()
        	    }
 	    i++;
     }
-    lprint("Unknow command:%s\n",cmd_buf);
+    lprint("Unknow cmd:%s\n",cmd_buf);
 }
 
 uint time_limit_recv_byte(uint limit, unsigned char * c);
@@ -265,7 +265,7 @@ void run_clean_boot()
 {
 	unsigned char c;
 	
-	mrw_addr = 0x30000000;
+	mrw_addr = (uint*)0x30000000;
 	lprint("\n\nMini_clean_boot v%s.\nAnykey stop auto load file\n", CLEAN_BOOT_VERSION);
 	xmodem_1k_recv((unsigned char*)mrw_addr);
 	lmemset(cmd_buf, 0, COM_MAX_LEN);
@@ -274,19 +274,17 @@ void run_clean_boot()
 	
 	while(1){
 		c = con_recv();
-		if(c == ENTER_CHAR || c == 0x1b){
+		if(c == ENTER_CHAR || c == 0x1b || c== 0x03){
 			if(c == ENTER_CHAR)
 				handle_cmd();
 			lmemset(cmd_buf, 0, COM_MAX_LEN);
 			cmd_buf_p = 0;
 			lprint("\nCleanBoot@%s>", PLATFORM);
 		}
-		/*
 		else if(c == 0x08 && cmd_buf_p > 0){
                         cmd_buf[--cmd_buf_p] = 0;
                         print_string("\b \b");
 		}
-		*/
 		else{
 			if(cmd_buf_p < (COM_MAX_LEN - 1)){
 				cmd_buf[cmd_buf_p++] = c;
