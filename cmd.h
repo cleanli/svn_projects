@@ -19,5 +19,7 @@ void print_help(unsigned char *para);
 void read_mem(unsigned char *para);
 void write_mem(unsigned char *para);
 void run_clean_boot();
+void nandcopy(unsigned char *para);
+void nandwb(unsigned char *para);
 
 #endif

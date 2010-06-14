@@ -74,3 +74,26 @@ int nand_read_ll(unsigned char *buf, unsigned long start_addr, int size)
         NAND_CHIP_DISABLE;
         return 0;
 }
+
+uint random_write_nand(unsigned char c, uint addr)
+{
+        NAND_CHIP_ENABLE;
+        NAND_CLEAR_RB;
+	NFCMD = 0x80;
+        NFADDR = (addr) & 0xff;
+        NFADDR = (addr >> 9) & 0xff;
+        NFADDR = (addr >> 17) & 0xff;
+        NFADDR = (addr >> 25) & 0xff;
+	NFDATA = c;
+	NFCMD = 0x10;
+        NAND_DETECT_RB;
+	while(!(NFSTAT & 0x1));
+	NFCMD = 0x70;
+	if(NFDATA & 0x1){
+		lprint("program failed! may get bad.\r\n");
+        	NAND_CHIP_DISABLE;
+		return -1;
+	}
+        NAND_CHIP_DISABLE;
+	return 0;
+}

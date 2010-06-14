@@ -12,6 +12,8 @@ static const struct command cmd_list[]=
     {"gfbs",get_file_by_serial},
     {"go",go},
     {"help",print_help},
+    {"nandwb",nandwb},
+    {"nandcopy",nandcopy},
     {"pm",print_mem},
     {"r",read_mem},
     {"w",write_mem},
@@ -178,6 +180,44 @@ error:
 
 }
 
+void nandcopy(unsigned char *p)
+{
+    uint addr, tmp, size;
+
+    tmp = get_howmany_para(p);
+    if(tmp != 2)
+        goto error;
+    p = str_to_hex(p, &addr);
+    p = str_to_hex(p, &size);
+
+    if(nand_read_ll(mrw_addr, addr, size) == 0)
+    	lprint("successfully\r\n");
+    return;
+
+error:
+    lprint("Error para!\r\nnandcopy (hex addr)(hex size) nand read cmd\r\n");
+
+}
+
+void nandwb(unsigned char *p)
+{
+    uint addr, tmp, c;
+
+    tmp = get_howmany_para(p);
+    if(tmp != 2)
+        goto error;
+    p = str_to_hex(p, &addr);
+    p = str_to_hex(p, &c);
+
+    c &= 0xff;
+    if(random_write_nand((unsigned char)c, addr) == 0)
+    	lprint("successfully\r\n");
+    return;
+
+error:
+    lprint("Error para!\r\nnandwb (hex addr)(hex char) random write nand\r\n");
+
+}
 
 unsigned char* lmemcpy(unsigned char *d,unsigned char*s,uint n)
 {
