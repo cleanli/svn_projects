@@ -16,7 +16,7 @@ uint time_limit_recv_byte(uint limit, unsigned char * c)
 
 uint xmodem_1k_recv(unsigned char*p)
 {
-        uint i = 128, tmp = 0xa0000, repeat = 66;
+        uint i = 128, tmp = 0xa0000, repeat = 86;
 	unsigned char recved = 0, index = 1, check_sum = 0, *c;
 
 	c = p;

@@ -1,3 +1,8 @@
+modified 10.06.15
+1 set a magic number to auto boot
+2 load 0x1000 0x1000 to ram to find env
+
+
 mini clean boot v1.2 released:
 1 when power on, will load 0x4000 data from nand flash 0x4000
 2 then it will enter the interface load file from serial. any key will go to command interface; after load file from serial, any key within 1 second will go to cmd interface, or it will run the download program.

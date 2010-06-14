@@ -199,8 +199,8 @@ loop10:
         @ldr     sp, DW_STACK_START      @ has been setuped at start
 
 #define TEXT_RAM_BASE   0x33ffc000
-#define TEXT_NAND_BASE  0x4000
-#define TEXT_SIZE       0x4000
+#define TEXT_NAND_BASE  0x1000
+#define TEXT_SIZE       0x1000
 
         @ copy minicb ENV block to ram base
         ldr     r0, =TEXT_RAM_BASE
@@ -218,11 +218,11 @@ loop101:
 	cmp	r4, r5
 	beq	main	@if not found go strait to main
 	b	loop101
-/*the para integer in nand should be : Rambase, Nandbase, Copysize*/	
+/*the para integer in nand should be : Rambase, Nandbase, Copysize, Magic*/	
 found_it:
-	cmp	r7, #0
-	beq	main
-	mov	r2, r7		@or it will be the Copy Size
+	cmp	r7, #0x000000cb
+	bne	main
+	ldr	r2, [r5, #-4]!	@before it will be the Copy Size
 	ldr	r1, [r5, #-4]!	@before it is nand base
 	ldr	r0, [r5, #-4]!	@before it is ram base
 	stmfd	sp!, {r0-r2}
@@ -235,7 +235,7 @@ found_it:
 	ldr	r0, =press_key
 	bl	print_string
 
-	mov	r0, #0x160000	@delay time
+	mov	r0, #0x180000	@delay time
         ldr     r1, =TEXT_RAM_BASE + TEXT_SIZE	@no use value addr
 	bl	time_limit_recv_byte
 	cmp	r0, #0		@if key pressed, 
@@ -246,8 +246,8 @@ found_it:
         bl      nand_read_ll	@copy real program
 	mov	pc, r5		@run the program
 press_key:
-	.string "Any key stop autoboot...\r\n"
+	.string "Any key stop autoboot...\n"
 print_para:
-	.string "\r\nram=%x nand=%x size=%x\r\n"
+	.string "\nram=%x nand=%x size=%x\n"
                                            
 /*****************************************************************************/

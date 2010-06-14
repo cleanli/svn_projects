@@ -90,7 +90,7 @@ uint random_write_nand(unsigned char c, uint addr)
 	while(!(NFSTAT & 0x1));
 	NFCMD = 0x70;
 	if(NFDATA & 0x1){
-		lprint("program failed! may get bad.\r\n");
+		lprint("program failed! may get bad.\n");
         	NAND_CHIP_DISABLE;
 		return -1;
 	}

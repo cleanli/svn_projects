@@ -5,6 +5,7 @@
 //#define div(X,Y) (X)/(Y)
 void print_string(unsigned char *s)
 {
+	/*
         unsigned char c;
         while(1){
                 if(!(c = *s++))
@@ -12,7 +13,9 @@ void print_string(unsigned char *s)
                 con_send(c);
         }
         return;
-
+	*/
+	while(*s)
+		con_send(*s++);
 }
 
 unsigned char halfbyte2char(unsigned char c)
@@ -20,6 +23,7 @@ unsigned char halfbyte2char(unsigned char c)
         return ((c & 0x0f) < 0x0a)?(0x30 + c):('A' + c - 0x0a);
 }
 
+/*
 uint div(uint beichushu, uint chushu)
 {
     uint shang = 0, tmp = 0;
@@ -79,6 +83,16 @@ void print_hex(uint num)
         num2str(num, nc, 16);
         print_string(nc);
 }
+*/
+
+void print_hex(uint num)
+{
+	int i = 8;
+	while(i--){
+		con_send(halfbyte2char((num & 0xf0000000)>>28));
+		num <<= 4;
+	}
+}
 
 void lprint(const unsigned char * fmt, ...)
 {
@@ -89,6 +103,8 @@ void lprint(const unsigned char * fmt, ...)
     va_start(ap, fmt);
     while (*fmt) {
         if (*fmt != '%') {
+	    if(*fmt == '\n')
+		con_send('\r');
 	    con_send(*fmt++);
             continue;
         }
@@ -100,11 +116,11 @@ void lprint(const unsigned char * fmt, ...)
                 s = va_arg(ap, const unsigned char *);
                 print_string(s);
                 break;
+	    /*
             case 'd':
                 d = va_arg(ap, int);
                 print_uint(d);
                 break;
-	    /*
 	    case 'c':
                 d = va_arg(ap, char);
                 send_int(d);

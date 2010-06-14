@@ -34,11 +34,11 @@ void get_file_by_serial(unsigned char *para)
 	uint i = 1028, tmp = 0x20000, repeat = 36;
 	unsigned char *c = (unsigned char*const)0xbf4;
 
-	lprint("\r\nNow start(*0xbf4 = 0 will be test):\r\n\r\n");
+	lprint("\nNow start(*0xbf4 = 0 will be test):\n\n");
 	if(*c)
 		con_send(0x15);
 	else
-		lprint("\r\nTest, time is up!\r\n");
+		lprint("\nTest, time is up!\n");
 	while(tmp--)
 		if(is_con_recv())
 			break;
@@ -53,11 +53,11 @@ void get_file_by_serial(unsigned char *para)
 void print_help(unsigned char *para)
 {
     uint i = 0;
-    lprint("Cmd:\r\n");
+    lprint("Cmd:\n");
     while(1){
             if(cmd_list[i].cmd_name == NULL)
                     break;
-	    lprint("--%s\r\n", cmd_list[i].cmd_name);
+	    lprint("--%s\n", cmd_list[i].cmd_name);
             i++;
     }
 }
@@ -118,20 +118,20 @@ void print_mem(unsigned char *p)
     str_to_hex(p, &length);
 print:
     cp = (unsigned char *)mrw_addr;
-    lprint("Print 0x%x mem content @%x:\r\n", length, (uint)mrw_addr);
+    lprint("Print 0x%x mem content @%x:\n", length, (uint)mrw_addr);
     while(length){
-	lprint("\r\n");
+	lprint("\n");
 	for(i=0;i<8;i++){
 		length--;
 		lprint("%x\t", *cp++);
 	}
     }
-    lprint("\r\nPrint end @%x.\r\n", (uint)mrw_addr);
+    lprint("\nPrint end @%x.\n", (uint)mrw_addr);
 
     return;
 
 error:
-    lprint("Error para!\r\npm [length](0x80 if no this argu)\r\n");
+    lprint("Error para!\npm [length](0x80 if no this argu)\n");
 
 }
 
@@ -149,11 +149,11 @@ void write_mem(unsigned char *p)
     mrw_addr = (uint*)((uint)mrw_addr & 0xfffffffc);
 write:
     *(uint*)mrw_addr = value;
-    lprint("Write 0x%x to memory 0x%x done!\r\n",value,mrw_addr);
+    lprint("Write 0x%x to memory 0x%x done!\n",value,mrw_addr);
     return;
 
 error:
-    lprint("Error para!\r\nw (hex addr) [(hex addr)](last addr if no this argu)\r\n");
+    lprint("Error para!\nw (hex addr) [(hex addr)](last addr if no this argu)\n");
 
 }
 
@@ -171,12 +171,12 @@ void read_mem(unsigned char *p)
     mrw_addr = (uint*)((uint)mrw_addr & 0xfffffffc);
 read:
     value = *(uint*)mrw_addr;
-    lprint("Read 0x%x at memory 0x%x\r\n",value,mrw_addr);
+    lprint("Read 0x%x at memory 0x%x\n",value,mrw_addr);
 
     return;
 
 error:
-    lprint("Error para!\r\nr [(hex addr)](last addr if no this argu)\r\n");
+    lprint("Error para!\nr [(hex addr)](last addr if no this argu)\n");
 
 }
 
@@ -191,11 +191,11 @@ void nandcopy(unsigned char *p)
     p = str_to_hex(p, &size);
 
     if(nand_read_ll(mrw_addr, addr, size) == 0)
-    	lprint("successfully\r\n");
+    	lprint("successfully\n");
     return;
 
 error:
-    lprint("Error para!\r\nnandcopy (hex addr)(hex size) nand read cmd\r\n");
+    lprint("Error para!\nnandcopy (hex addr)(hex size) nand read cmd\n");
 
 }
 
@@ -211,20 +211,22 @@ void nandwb(unsigned char *p)
 
     c &= 0xff;
     if(random_write_nand((unsigned char)c, addr) == 0)
-    	lprint("successfully\r\n");
+    	lprint("successfully\n");
     return;
 
 error:
-    lprint("Error para!\r\nnandwb (hex addr)(hex char) random write nand\r\n");
+    lprint("Error para!\nnandwb (hex addr)(hex char) random write nand\n");
 
 }
 
+/*
 unsigned char* lmemcpy(unsigned char *d,unsigned char*s,uint n)
 {
 	unsigned char *p=d;
 	while(n--)*d++=*s++;
 	return p;
 }
+*/
 
 void lmemset(unsigned char *d,unsigned char v,unsigned int n)
 {
@@ -235,7 +237,7 @@ void handle_cmd()
 {
     unsigned char i = 0, *p_cmd, *p_buf;
 
-    lprint("\r\n");
+    lprint("\n");
     if(!cmd_buf[0])
 	return;
     while(1){
@@ -255,7 +257,7 @@ void handle_cmd()
        	    }
 	    i++;
     }
-    lprint("Unknow command:%s\r\n",cmd_buf);
+    lprint("Unknow command:%s\n",cmd_buf);
 }
 
 uint time_limit_recv_byte(uint limit, unsigned char * c);
@@ -264,11 +266,11 @@ void run_clean_boot()
 	unsigned char c;
 	
 	mrw_addr = 0x30000000;
-	lprint("\r\n\r\nMini_clean_boot v%s,%s %s.\r\nAnykey stop auto load file\r\n", CLEAN_BOOT_VERSION,__DATE__,__TIME__);
+	lprint("\n\nMini_clean_boot v%s.\nAnykey stop auto load file\n", CLEAN_BOOT_VERSION);
 	xmodem_1k_recv((unsigned char*)mrw_addr);
 	lmemset(cmd_buf, 0, COM_MAX_LEN);
 	cmd_buf_p = 0;
-	lprint("\r\nCleanBoot@%s>", PLATFORM);
+	lprint("\nCleanBoot@%s>", PLATFORM);
 	
 	while(1){
 		c = con_recv();
@@ -277,8 +279,14 @@ void run_clean_boot()
 				handle_cmd();
 			lmemset(cmd_buf, 0, COM_MAX_LEN);
 			cmd_buf_p = 0;
-			lprint("\r\nCleanBoot@%s>", PLATFORM);
+			lprint("\nCleanBoot@%s>", PLATFORM);
 		}
+		/*
+		else if(c == 0x08 && cmd_buf_p > 0){
+                        cmd_buf[--cmd_buf_p] = 0;
+                        print_string("\b \b");
+		}
+		*/
 		else{
 			if(cmd_buf_p < (COM_MAX_LEN - 1)){
 				cmd_buf[cmd_buf_p++] = c;
