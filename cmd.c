@@ -276,7 +276,7 @@ void run_clean_boot()
 	xmodem_1k_recv((unsigned char*)mrw_addr);
 	lmemset(cmd_buf, 0, COM_MAX_LEN);
 	cmd_buf_p = 0;
-	lprint("\nCleanBoot@%s>", PLATFORM);
+	lprint("\nCleanBoot>");
 	
 	while(1){
 		c = con_recv();
@@ -285,9 +285,11 @@ void run_clean_boot()
 				handle_cmd();
 			lmemset(cmd_buf, 0, COM_MAX_LEN);
 			cmd_buf_p = 0;
-			lprint("\nCleanBoot@%s>", PLATFORM);
+			lprint("\nCleanBoot>");
 		}
-		else if(c == 0x08 && cmd_buf_p > 0){
+		else if(c == 0x08){
+			if(!cmd_buf_p)
+				continue;
                         cmd_buf[--cmd_buf_p] = 0;
                         print_string("\b \b");
 		}
