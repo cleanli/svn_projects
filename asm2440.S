@@ -233,9 +233,9 @@ found_it:
 	bl	lprint
 
 	ldr	r0, =press_key
-	bl	print_string
+	bl	lprint
 
-	mov	r0, #0x180000	@delay time
+	mov	r0, #0x280000	@delay time
         ldr     r1, =TEXT_RAM_BASE + TEXT_SIZE	@no use value addr
 	bl	time_limit_recv_byte
 	cmp	r0, #0		@if key pressed, 

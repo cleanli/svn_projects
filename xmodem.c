@@ -22,7 +22,7 @@ uint xmodem_1k_recv(unsigned char*p)
 	c = p;
 	do{
                 con_send(0x15);
-		if(time_limit_recv_byte(0x80000, &recved) == 0)
+		if(time_limit_recv_byte(0xa0000, &recved) == 0)
 			break;
 	}while(repeat--);
 	if(!repeat){
@@ -69,7 +69,7 @@ start_recv_package:
 		return 2;
 	}
 	con_send(ACK);
-	if(time_limit_recv_byte(0x20000, &recved) == 1){
+	if(time_limit_recv_byte(0x80000, &recved) == 1){
 		con_send(CAN);
 		return 2;
 	}

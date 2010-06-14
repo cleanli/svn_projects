@@ -9,7 +9,6 @@ static uint cmd_buf_p = COM_MAX_LEN;
 
 static const struct command cmd_list[]=
 {
-    {"gfbs",get_file_by_serial},
     {"go",go},
     {"help",print_help},
     {"nandwb",nandwb},
@@ -17,6 +16,7 @@ static const struct command cmd_list[]=
     {"pm",print_mem},
     {"r",read_mem},
     {"w",write_mem},
+    {"xmodem",get_file_by_serial},
     {NULL, NULL},
 };
 static uint * mrw_addr;
@@ -149,11 +149,11 @@ void write_mem(unsigned char *p)
     mrw_addr = (uint*)((uint)mrw_addr & 0xfffffffc);
 write:
     *(uint*)mrw_addr = value;
-    lprint("Write 0x%x to memory 0x%x done!\n",value,mrw_addr);
+    lprint("Write 0x%x@0x%x\n",value,mrw_addr);
     return;
 
 error:
-    lprint("Err!\nw (hex addr) [(hex addr)](last addr if no this argu)\n");
+    lprint("Err!\nw (hexaddr) [(hexaddr)](last addr default)\n");
 
 }
 
@@ -176,7 +176,7 @@ read:
     return;
 
 error:
-    lprint("Err!\nr [(hex addr)](last addr if no this argu)\n");
+    lprint("Err!\nr [(hexaddr)](last addr default)\n");
 
 }
 
@@ -204,18 +204,24 @@ void nandwb(unsigned char *p)
     uint addr, tmp, c;
 
     tmp = get_howmany_para(p);
-    if(tmp != 2)
+    if(tmp == 1)
         goto error;
     p = str_to_hex(p, &addr);
-    p = str_to_hex(p, &c);
-
-    c &= 0xff;
-    if(random_write_nand((unsigned char)c, addr) == 0)
-    	lprint("successfully\n");
+    tmp--;
+    while(tmp--){
+	    p = str_to_hex(p, &c);
+	    c &= 0xff;
+	    if(random_write_nand((unsigned char)c, addr) != 0){
+		lprint("failed\n");
+		return;
+	    }
+	    addr++;
+    }
+    lprint("ok\n");
     return;
 
 error:
-    lprint("Err!\nnandwb hexaddr hexchar\n");
+    lprint("Err!\nnandwb hexaddr hexchar...\n");
 
 }
 
